@@ -1,0 +1,22 @@
+package com.daniel.marketplaceapp.user.controller
+
+import com.daniel.marketplaceapp.user.dto.SearchResponse
+import com.daniel.marketplaceapp.user.service.UserService
+import com.daniel.marketplaceapp.user.util.toSearchResponse
+import org.springframework.http.ResponseEntity
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RestController
+
+@RestController
+@RequestMapping("/users")
+class UserController(
+    private val userService: UserService,
+) {
+    @GetMapping("/{id}")
+    fun getUser(@PathVariable id: Long): ResponseEntity<SearchResponse> {
+        val user = userService.findByIdOrThrow(id)
+        return ResponseEntity.ok(user.toSearchResponse())
+    }
+}

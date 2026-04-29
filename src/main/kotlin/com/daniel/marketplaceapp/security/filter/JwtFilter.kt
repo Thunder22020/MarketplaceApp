@@ -1,0 +1,64 @@
+package com.daniel.marketplaceapp.security.filter
+
+import com.daniel.marketplaceapp.security.service.JwtService
+import com.daniel.marketplaceapp.security.util.JwtConstants
+import jakarta.servlet.FilterChain
+import jakarta.servlet.http.HttpServletRequest
+import jakarta.servlet.http.HttpServletResponse
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
+import org.springframework.security.core.context.SecurityContextHolder
+import org.springframework.security.core.userdetails.UserDetailsService
+import org.springframework.security.web.authentication.WebAuthenticationDetailsSource
+import org.springframework.stereotype.Component
+import org.springframework.web.filter.OncePerRequestFilter
+import java.util.Date
+
+@Component
+class JwtFilter(
+    private val jwtService: JwtService,
+    private val userDetailsService: UserDetailsService
+) : OncePerRequestFilter() {
+    override fun doFilterInternal(
+        request: HttpServletRequest,
+        response: HttpServletResponse,
+        filterChain: FilterChain
+    ) {
+        if (SecurityContextHolder.getContext().authentication != null) {
+            filterChain.doFilter(request, response)
+            return
+        }
+
+        val token = extractToken(request) ?: run {
+            filterChain.doFilter(request, response)
+            return
+        }
+
+        authenticate(token, request)
+
+        filterChain.doFilter(request, response)
+    }
+
+    private fun extractToken(request: HttpServletRequest): String? {
+        return request.getHeader(JwtConstants.AUTH_HEADER)
+            ?.takeIf { it.startsWith(JwtConstants.BEARER_PREFIX) }
+            ?.removePrefix(JwtConstants.BEARER_PREFIX)
+    }
+
+    private fun authenticate(token: String, request: HttpServletRequest) {
+        val claims = jwtService.parseToken(token) ?: return
+        val username = claims.subject ?: return
+        if (claims.expiration.before(Date())) return
+
+        val userDetails = userDetailsService.loadUserByUsername(username)
+
+        val authToken = UsernamePasswordAuthenticationToken(
+            userDetails,
+            null,
+            userDetails.authorities
+        ).apply {
+            details = WebAuthenticationDetailsSource().buildDetails(request)
+        }
+
+        SecurityContextHolder.getContext().authentication = authToken
+    }
+}
