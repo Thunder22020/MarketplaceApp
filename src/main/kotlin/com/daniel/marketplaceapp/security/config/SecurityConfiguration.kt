@@ -17,22 +17,16 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.security.web.SecurityFilterChain
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter
-import org.springframework.web.cors.CorsConfiguration
-import org.springframework.web.cors.CorsConfigurationSource
-import org.springframework.web.cors.UrlBasedCorsConfigurationSource
 
 @Configuration
 @EnableWebSecurity
 class SecurityConfiguration(
     private val userDetailsService: UserDetailsService,
     private val jwtFilter: JwtFilter,
-    @Value("\${app.cors.allowed-origins}")
-    private val allowedOrigin: String,
 ) {
     @Bean
     fun securityFilterChain(http: HttpSecurity): SecurityFilterChain = http
         .csrf { i -> i.disable() }
-        .cors { it.configurationSource(corsConfigurationSource()) }
         .logout { i -> i.disable() }
         .exceptionHandling { exception ->
             exception.authenticationEntryPoint { _, response, _ ->
@@ -52,20 +46,6 @@ class SecurityConfiguration(
         }
         .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter::class.java)
         .build()
-
-    @Bean
-    fun corsConfigurationSource(): CorsConfigurationSource {
-        val config = CorsConfiguration().apply {
-            allowedMethods = listOf("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS")
-            allowedOrigins = listOf(allowedOrigin)
-            allowedHeaders = listOf("Authorization", "Content-Type", "X-Requested-With", "Accept")
-            allowCredentials = true
-            maxAge = 3600L
-        }
-        return UrlBasedCorsConfigurationSource().apply {
-            registerCorsConfiguration("/**", config)
-        }
-    }
 
     @Bean
     fun passwordEncoder(): PasswordEncoder =
