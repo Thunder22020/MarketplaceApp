@@ -9,7 +9,7 @@ spring:
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: none
     database: postgresql
     open-in-view: false
     show-sql: true
@@ -20,6 +20,8 @@ spring:
         transaction:
           jta:
             platform: org.hibernate.service.jta.JtaService
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.yaml
 app:
   cookie:
     secure: false

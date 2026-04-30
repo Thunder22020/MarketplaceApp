@@ -26,10 +26,6 @@ class UserService(
         return userRepository.save(entity)
     }
 
-    fun findByUsernameOrThrow(username: String) =
-        userRepository.findByUsername(username)
-            ?: throw UserNotFoundException("User $username not found")
-
     fun findByIdOrThrow(id: Long): User =
         userRepository.findById(id).orElseThrow {
             UserNotFoundException("User with ID:$id not found")
