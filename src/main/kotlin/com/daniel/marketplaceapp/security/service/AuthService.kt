@@ -1,9 +1,11 @@
 package com.daniel.marketplaceapp.security.service
 
-import com.daniel.marketplaceapp.user.dto.UserRequest
+import com.daniel.marketplaceapp.security.exception.InvalidCredentialsException
+import com.daniel.marketplaceapp.user.dto.LoginRequest
 import com.daniel.marketplaceapp.user.exception.UserNotFoundException
 import com.daniel.marketplaceapp.user.repository.UserRepository
 import org.springframework.security.authentication.AuthenticationManager
+import org.springframework.security.authentication.BadCredentialsException
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.stereotype.Service
 
@@ -13,19 +15,24 @@ class AuthService(
     private val jwtService: JwtService,
     private val userRepository: UserRepository,
 ) {
-    fun verifyAndGetToken(user: UserRequest): String {
-        if (userRepository.findByUsername(user.username) == null) {
+    fun verifyAndGetToken(loginRequest: LoginRequest): String {
+        if (userRepository.findByUsername(loginRequest.username) == null) {
             throw UserNotFoundException("User not found")
         }
-
-        val authToken = UsernamePasswordAuthenticationToken(
-            user.username,
-            user.password
-        )
-        authManager.authenticate(authToken)
-
-        val accessToken = jwtService.generateToken(user.username)
-
+        tryAuthenticate(loginRequest)
+        val accessToken = jwtService.generateToken(loginRequest.username)
         return accessToken
+    }
+
+    fun tryAuthenticate(loginRequest: LoginRequest) {
+        try {
+            val authToken = UsernamePasswordAuthenticationToken(
+                loginRequest.username,
+                loginRequest.password
+            )
+            authManager.authenticate(authToken)
+        } catch (_: BadCredentialsException) {
+            throw InvalidCredentialsException()
+        }
     }
 }
