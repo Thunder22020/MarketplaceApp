@@ -1,5 +1,6 @@
 package com.daniel.marketplaceapp.testsupport.steps
 
+import com.daniel.marketplaceapp.testsupport.data.TestUser
 import com.daniel.marketplaceapp.testsupport.data.randomPassword
 import com.daniel.marketplaceapp.testsupport.data.randomUsername
 import com.daniel.marketplaceapp.user.dto.RegisterRequest
@@ -16,4 +17,11 @@ class UserSteps(
     ) = userService.save(
         RegisterRequest(username, password)
     )
+
+    fun createRandomUser(): TestUser {
+        val username = randomUsername()
+        val password = randomPassword()
+        createUser(username, password)
+        return TestUser(username, password)
+    }
 }

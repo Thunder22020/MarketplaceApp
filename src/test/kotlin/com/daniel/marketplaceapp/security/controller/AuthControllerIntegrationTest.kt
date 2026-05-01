@@ -19,7 +19,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 
 @SpringBootTest
 @AutoConfigureMockMvc
-class AuthControllerTest {
+class AuthControllerIntegrationTest {
     @Autowired
     private lateinit var mockMvc: MockMvc
 
@@ -45,8 +45,8 @@ class AuthControllerTest {
 
     @Test
     fun `should return conflict when register the existing user`() {
-        val request = RegisterRequest(randomUsername(), randomPassword())
-        userSteps.createUser(request.username, request.password)
+        val (username, password) = userSteps.createRandomUser()
+        val request = RegisterRequest(username, password)
 
         mockMvc.perform(
             post(REGISTER_URL)
@@ -73,7 +73,7 @@ class AuthControllerTest {
     }
 
     @Test
-    fun `should return unauthorized when register password is invalid`() {
+    fun `should return bad request when register password is invalid`() {
         val request = RegisterRequest(randomUsername(), TOO_SHORT_VALUE)
 
         mockMvc.perform(
@@ -89,10 +89,8 @@ class AuthControllerTest {
 
     @Test
     fun `should login existing user`() {
-        val username = randomUsername()
-        val password = randomPassword()
+        val (username, password) = userSteps.createRandomUser()
         val loginRequest = LoginRequest(username, password)
-        userSteps.createUser(username, password)
 
         mockMvc.perform(
             post(LOGIN_URL)
@@ -104,7 +102,7 @@ class AuthControllerTest {
     }
 
     @Test
-    fun `should return not found when login the non existing user`() {
+    fun `should return not found when login the non-existing user`() {
         val loginRequest = LoginRequest(randomUsername(), randomPassword())
 
         mockMvc.perform(
@@ -119,12 +117,8 @@ class AuthControllerTest {
 
     @Test
     fun `should return unauthorized when login with wrong password`() {
-        val username = randomUsername()
-        val correctPassword = randomPassword()
+        val (username, correctPassword) = userSteps.createRandomUser()
         val wrongPassword = "${correctPassword}_wrong"
-
-        userSteps.createUser(username, correctPassword)
-
         val loginRequest = LoginRequest(username, wrongPassword)
 
         mockMvc.perform(
