@@ -21,7 +21,7 @@ class UserService(
 
         val entity = User(
             username = dto.username,
-            password = requireNotNull(encoder.encode(dto.password))
+            passwordHash = requireNotNull(encoder.encode(dto.password))
         )
 
         return userRepository.save(entity)
