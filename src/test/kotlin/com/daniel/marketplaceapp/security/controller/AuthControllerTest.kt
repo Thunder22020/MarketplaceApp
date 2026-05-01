@@ -1,7 +1,11 @@
 package com.daniel.marketplaceapp.security.controller
 
+import com.daniel.marketplaceapp.testsupport.data.TOO_SHORT_VALUE
+import com.daniel.marketplaceapp.testsupport.data.randomPassword
+import com.daniel.marketplaceapp.testsupport.data.randomUsername
+import com.daniel.marketplaceapp.testsupport.steps.UserSteps
+import com.daniel.marketplaceapp.user.dto.LoginRequest
 import com.daniel.marketplaceapp.user.dto.RegisterRequest
-import com.daniel.marketplaceapp.user.dto.UserResponse
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -10,35 +14,131 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.http.MediaType
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
-import kotlin.test.assertEquals
 
 @SpringBootTest
 @AutoConfigureMockMvc
-class AuthControllerTest{
+class AuthControllerTest {
     @Autowired
     private lateinit var mockMvc: MockMvc
 
     @Autowired
-    lateinit var objectMapper: ObjectMapper
+    private lateinit var objectMapper: ObjectMapper
+
+    @Autowired
+    private lateinit var userSteps: UserSteps
 
     @Test
     fun `should register new user`() {
-        val request = RegisterRequest("Danila", "123123")
+        val request = RegisterRequest(randomUsername(), randomPassword())
 
-        val result = mockMvc.perform(
-            post("/api/auth/register")
+        mockMvc.perform(
+            post(REGISTER_URL)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request))
         )
             .andExpect(status().isOk)
-            .andReturn()
+            .andExpect(jsonPath("$.password").doesNotExist())
+            .andExpect(jsonPath("$.username").value(request.username))
+    }
 
-        val response = objectMapper.readValue(
-            result.response.contentAsString,
-            UserResponse::class.java
+    @Test
+    fun `should return conflict when register the existing user`() {
+        val request = RegisterRequest(randomUsername(), randomPassword())
+        userSteps.createUser(request.username, request.password)
+
+        mockMvc.perform(
+            post(REGISTER_URL)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request))
         )
+            .andExpect(status().isConflict)
+            .andExpect(jsonPath("$.code").value("USER_ALREADY_EXISTS"))
+    }
 
-        assertEquals("Danila", response.username)
+    @Test
+    fun `should return bad request when register username is invalid`() {
+        val request = RegisterRequest(TOO_SHORT_VALUE, randomPassword())
+
+        mockMvc.perform(
+            post(REGISTER_URL)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request))
+        )
+            .andExpect(status().isBadRequest)
+            .andExpect(jsonPath("$.details[0].field").value("username"))
+            .andExpect(jsonPath("$.details[0].message")
+                .value("Username must be between 3 and 30"))
+    }
+
+    @Test
+    fun `should return unauthorized when register password is invalid`() {
+        val request = RegisterRequest(randomUsername(), TOO_SHORT_VALUE)
+
+        mockMvc.perform(
+            post(REGISTER_URL)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request))
+        )
+            .andExpect(status().isBadRequest)
+            .andExpect(jsonPath("$.details[0].field").value("password"))
+            .andExpect(jsonPath("$.details[0].message")
+                .value("Password must be at least 6 characters long"))
+    }
+
+    @Test
+    fun `should login existing user`() {
+        val username = randomUsername()
+        val password = randomPassword()
+        val loginRequest = LoginRequest(username, password)
+        userSteps.createUser(username, password)
+
+        mockMvc.perform(
+            post(LOGIN_URL)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(loginRequest))
+        )
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$.accessToken").isNotEmpty())
+    }
+
+    @Test
+    fun `should return not found when login the non existing user`() {
+        val loginRequest = LoginRequest(randomUsername(), randomPassword())
+
+        mockMvc.perform(
+            post(LOGIN_URL)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(loginRequest))
+        )
+            .andExpect(status().isNotFound)
+            .andExpect(jsonPath("$.code").value("USER_NOT_FOUND"))
+            .andExpect(jsonPath("$.accessToken").doesNotExist())
+    }
+
+    @Test
+    fun `should return unauthorized when login with wrong password`() {
+        val username = randomUsername()
+        val correctPassword = randomPassword()
+        val wrongPassword = "${correctPassword}_wrong"
+
+        userSteps.createUser(username, correctPassword)
+
+        val loginRequest = LoginRequest(username, wrongPassword)
+
+        mockMvc.perform(
+            post(LOGIN_URL)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(loginRequest))
+        )
+            .andExpect(status().isUnauthorized)
+            .andExpect(jsonPath("$.code").value("INVALID_CREDENTIALS"))
+            .andExpect(jsonPath("$.accessToken").doesNotExist())
+    }
+
+    companion object {
+        private const val REGISTER_URL = "/api/auth/register"
+        private const val LOGIN_URL = "/api/auth/login"
     }
 }
