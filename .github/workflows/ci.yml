@@ -22,3 +22,47 @@ jobs:
 
       - name: Run tests
         run: ./mvnw --batch-mode -q test
+
+      - name: Publish test summary
+        if: always()
+        shell: bash
+        run: |
+          shopt -s nullglob
+          reports=(target/surefire-reports/TEST-*.xml)
+
+          echo "## Test Results" >> "$GITHUB_STEP_SUMMARY"
+
+          if [ ${#reports[@]} -eq 0 ]; then
+            echo "No Surefire test reports were found." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+          total=0
+          failures=0
+          errors=0
+          skipped=0
+
+          for report in "${reports[@]}"; do
+            tests_count=$(grep -o 'tests="[0-9]*"' "$report" | head -1 | grep -o '[0-9]*')
+            failures_count=$(grep -o 'failures="[0-9]*"' "$report" | head -1 | grep -o '[0-9]*')
+            errors_count=$(grep -o 'errors="[0-9]*"' "$report" | head -1 | grep -o '[0-9]*')
+            skipped_count=$(grep -o 'skipped="[0-9]*"' "$report" | head -1 | grep -o '[0-9]*')
+
+            total=$((total + tests_count))
+            failures=$((failures + failures_count))
+            errors=$((errors + errors_count))
+            skipped=$((skipped + skipped_count))
+          done
+
+          passed=$((total - failures - errors - skipped))
+
+          if [ "$failures" -eq 0 ] && [ "$errors" -eq 0 ]; then
+            echo "✅ **$passed/$total tests passed**" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "❌ **$passed/$total tests passed**" >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Total | Passed | Failed | Errors | Skipped |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| ---: | ---: | ---: | ---: | ---: |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| $total | $passed | $failures | $errors | $skipped |" >> "$GITHUB_STEP_SUMMARY"
