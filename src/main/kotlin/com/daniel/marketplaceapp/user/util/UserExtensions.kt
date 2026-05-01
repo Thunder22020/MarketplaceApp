@@ -6,4 +6,4 @@ import com.daniel.marketplaceapp.user.entity.User
 
 fun User.toSearchResponse() = SearchResponse(username)
 
-fun User.toResponse() = UserResponse(username, password)
+fun User.toResponse() = UserResponse(username)
