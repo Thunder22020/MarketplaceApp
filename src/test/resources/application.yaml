@@ -1,4 +1,6 @@
 spring:
+  main:
+    banner-mode: off
   datasource:
     url: jdbc:tc:postgresql:16-alpine:///marketplace_test
     username: test

@@ -1,8 +1,8 @@
 package com.daniel.marketplaceapp.testsupport.steps
 
-import com.daniel.marketplaceapp.testsupport.data.TestUser
-import com.daniel.marketplaceapp.testsupport.data.randomPassword
-import com.daniel.marketplaceapp.testsupport.data.randomUsername
+import com.daniel.marketplaceapp.testsupport.fixtures.TestUser
+import com.daniel.marketplaceapp.testsupport.fixtures.randomPassword
+import com.daniel.marketplaceapp.testsupport.fixtures.randomUsername
 import com.daniel.marketplaceapp.user.dto.RegisterRequest
 import com.daniel.marketplaceapp.user.service.UserService
 import org.springframework.stereotype.Component

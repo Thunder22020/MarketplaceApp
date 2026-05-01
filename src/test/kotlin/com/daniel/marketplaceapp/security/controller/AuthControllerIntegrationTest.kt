@@ -1,8 +1,8 @@
 package com.daniel.marketplaceapp.security.controller
 
-import com.daniel.marketplaceapp.testsupport.data.TOO_SHORT_VALUE
-import com.daniel.marketplaceapp.testsupport.data.randomPassword
-import com.daniel.marketplaceapp.testsupport.data.randomUsername
+import com.daniel.marketplaceapp.testsupport.fixtures.TOO_SHORT_VALUE
+import com.daniel.marketplaceapp.testsupport.fixtures.randomPassword
+import com.daniel.marketplaceapp.testsupport.fixtures.randomUsername
 import com.daniel.marketplaceapp.testsupport.steps.UserSteps
 import com.daniel.marketplaceapp.user.dto.LoginRequest
 import com.daniel.marketplaceapp.user.dto.RegisterRequest
