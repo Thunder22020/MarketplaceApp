@@ -7,6 +7,7 @@ import com.daniel.marketplaceapp.user.exception.UserNotFoundException
 import com.daniel.marketplaceapp.user.repository.UserRepository
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
+import java.util.*
 
 @Service
 class UserService(
@@ -26,7 +27,7 @@ class UserService(
         return userRepository.save(entity)
     }
 
-    fun findByIdOrThrow(id: Long): User =
+    fun findByIdOrThrow(id: UUID): User =
         userRepository.findById(id).orElseThrow {
             UserNotFoundException("User with ID:$id not found")
         }

@@ -4,7 +4,7 @@ import com.daniel.marketplaceapp.user.entity.User
 import org.springframework.security.core.GrantedAuthority
 import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.core.userdetails.UserDetails
-import java.util.Collections
+import java.util.*
 
 class UserPrincipal(
     val user: User,
@@ -14,7 +14,7 @@ class UserPrincipal(
     }
 
     override fun getPassword(): String? {
-        return user.password
+        return user.passwordHash
     }
 
     override fun getUsername(): String {
