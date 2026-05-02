@@ -1,0 +1,68 @@
+package com.daniel.marketplaceapp.product.service
+
+import com.daniel.marketplaceapp.core.domain.Money
+import com.daniel.marketplaceapp.product.dto.CreateProductRequest
+import com.daniel.marketplaceapp.product.dto.UpdateProductRequest
+import com.daniel.marketplaceapp.product.enums.ProductStatus
+import com.daniel.marketplaceapp.product.exception.ProductNotFoundException
+import com.daniel.marketplaceapp.product.mapper.updateFrom
+import com.daniel.marketplaceapp.product.model.Product
+import com.daniel.marketplaceapp.product.repository.ProductRepository
+import com.daniel.marketplaceapp.user.service.UserService
+import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
+import java.time.Instant
+import java.util.*
+
+@Service
+class ProductService(
+    private val productRepository: ProductRepository,
+    private val userService: UserService
+) {
+    @Transactional
+    fun create(req: CreateProductRequest, sellerId: UUID): Product {
+        val seller = userService.findByIdOrThrow(sellerId)
+        val product = Product(
+            title = req.title,
+            description = req.description,
+            price = Money(req.price),
+            seller = seller,
+            status = ProductStatus.ACTIVE,
+        )
+        return productRepository.save(product)
+    }
+
+    @Transactional
+    fun update(req: UpdateProductRequest, productId: UUID, sellerId: UUID): Product {
+        val product = findByIdAndSellerIdOrThrow(productId, sellerId)
+        product.updateFrom(req)
+        return product
+    }
+
+    @Transactional
+    fun delete(productId: UUID, sellerId: UUID) {
+        val product = findByIdAndSellerIdOrThrow(productId, sellerId)
+        product.status = ProductStatus.DELETED
+        product.updatedAt = Instant.now()
+    }
+
+    fun findAll() : List<Product> {
+        return productRepository.findAllByStatusOrderByCreatedAtDesc(ProductStatus.ACTIVE)
+    }
+
+    fun findAllBySellerId(sellerId: UUID, currentUserId: UUID): List<Product> {
+        val visibleStatuses = getVisibleStatuses(sellerId, currentUserId)
+        return productRepository.findAllBySellerIdAndStatusInOrderByCreatedAtDesc(sellerId, visibleStatuses)
+    }
+
+    private fun findByIdAndSellerIdOrThrow(id: UUID, sellerId: UUID) =
+        productRepository.findByIdAndSellerId(id, sellerId)
+            ?: throw ProductNotFoundException("Product with id $id not found")
+
+    private fun getVisibleStatuses(sellerId: UUID, currentUserId: UUID) =
+        if (sellerId == currentUserId) {
+            listOf(ProductStatus.ACTIVE, ProductStatus.HIDDEN)
+        } else {
+            listOf(ProductStatus.ACTIVE)
+        }
+}

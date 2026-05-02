@@ -1,4 +1,4 @@
-package com.daniel.marketplaceapp.user.dto
+package com.daniel.marketplaceapp.user.dto.request
 
 import jakarta.validation.constraints.NotBlank
 

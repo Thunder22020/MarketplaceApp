@@ -4,8 +4,8 @@ import com.daniel.marketplaceapp.testsupport.fixtures.TOO_SHORT_VALUE
 import com.daniel.marketplaceapp.testsupport.fixtures.randomPassword
 import com.daniel.marketplaceapp.testsupport.fixtures.randomUsername
 import com.daniel.marketplaceapp.testsupport.steps.UserSteps
-import com.daniel.marketplaceapp.user.dto.LoginRequest
-import com.daniel.marketplaceapp.user.dto.RegisterRequest
+import com.daniel.marketplaceapp.user.dto.request.LoginRequest
+import com.daniel.marketplaceapp.user.dto.request.RegisterRequest
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired

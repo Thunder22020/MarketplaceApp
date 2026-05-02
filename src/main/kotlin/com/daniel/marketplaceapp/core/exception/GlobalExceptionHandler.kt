@@ -4,6 +4,7 @@ import jakarta.servlet.http.HttpServletRequest
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.http.converter.HttpMessageNotReadableException
 import org.springframework.web.bind.MethodArgumentNotValidException
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
@@ -43,6 +44,21 @@ class GlobalExceptionHandler {
             message = "Validation failed",
             path = request.requestURI,
             details = details
+        )
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body)
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException::class)
+    fun handleInvalidRequestException(
+        ex: HttpMessageNotReadableException,
+        request: HttpServletRequest,
+    ): ResponseEntity<ApiError> {
+        log.error("Malformed JSON request", ex)
+        val body = ApiError(
+            status = HttpStatus.BAD_REQUEST.value(),
+            code = "MALFORMED_JSON",
+            message = "Malformed JSON request",
+            path = request.requestURI,
         )
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body)
     }

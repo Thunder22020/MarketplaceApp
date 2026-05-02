@@ -1,7 +1,7 @@
 package com.daniel.marketplaceapp.security.service
 
 import com.daniel.marketplaceapp.security.exception.InvalidCredentialsException
-import com.daniel.marketplaceapp.user.dto.LoginRequest
+import com.daniel.marketplaceapp.user.dto.request.LoginRequest
 import com.daniel.marketplaceapp.user.exception.UserNotFoundException
 import com.daniel.marketplaceapp.user.repository.UserRepository
 import org.springframework.security.authentication.AuthenticationManager

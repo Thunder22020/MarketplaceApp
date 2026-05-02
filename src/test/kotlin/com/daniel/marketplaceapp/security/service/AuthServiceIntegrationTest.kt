@@ -4,7 +4,7 @@ import com.daniel.marketplaceapp.security.exception.InvalidCredentialsException
 import com.daniel.marketplaceapp.testsupport.fixtures.randomPassword
 import com.daniel.marketplaceapp.testsupport.fixtures.randomUsername
 import com.daniel.marketplaceapp.testsupport.steps.UserSteps
-import com.daniel.marketplaceapp.user.dto.LoginRequest
+import com.daniel.marketplaceapp.user.dto.request.LoginRequest
 import com.daniel.marketplaceapp.user.exception.UserNotFoundException
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.nulls.shouldNotBeNull

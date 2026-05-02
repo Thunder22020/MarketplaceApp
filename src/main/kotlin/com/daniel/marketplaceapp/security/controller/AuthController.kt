@@ -2,10 +2,10 @@ package com.daniel.marketplaceapp.security.controller
 
 import com.daniel.marketplaceapp.security.dto.AccessTokenResponse
 import com.daniel.marketplaceapp.security.service.AuthService
-import com.daniel.marketplaceapp.user.dto.LoginRequest
-import com.daniel.marketplaceapp.user.dto.RegisterRequest
+import com.daniel.marketplaceapp.user.dto.request.LoginRequest
+import com.daniel.marketplaceapp.user.dto.request.RegisterRequest
+import com.daniel.marketplaceapp.user.mapper.toResponse
 import com.daniel.marketplaceapp.user.service.UserService
-import com.daniel.marketplaceapp.user.util.toResponse
 import jakarta.validation.Valid
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.PostMapping

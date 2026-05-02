@@ -1,8 +1,8 @@
 package com.daniel.marketplaceapp.user.controller
 
-import com.daniel.marketplaceapp.user.dto.SearchResponse
+import com.daniel.marketplaceapp.user.dto.response.SearchResponse
+import com.daniel.marketplaceapp.user.mapper.toSearchResponse
 import com.daniel.marketplaceapp.user.service.UserService
-import com.daniel.marketplaceapp.user.util.toSearchResponse
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable

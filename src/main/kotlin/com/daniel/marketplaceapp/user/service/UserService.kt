@@ -1,6 +1,6 @@
 package com.daniel.marketplaceapp.user.service
 
-import com.daniel.marketplaceapp.user.dto.RegisterRequest
+import com.daniel.marketplaceapp.user.dto.request.RegisterRequest
 import com.daniel.marketplaceapp.user.entity.User
 import com.daniel.marketplaceapp.user.exception.UserAlreadyExistsException
 import com.daniel.marketplaceapp.user.exception.UserNotFoundException
