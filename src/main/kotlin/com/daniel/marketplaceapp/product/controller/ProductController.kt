@@ -2,10 +2,13 @@ package com.daniel.marketplaceapp.product.controller
 
 import com.daniel.marketplaceapp.core.annotations.CurrentUserId
 import com.daniel.marketplaceapp.product.dto.CreateProductRequest
+import com.daniel.marketplaceapp.product.dto.ProductResponse
 import com.daniel.marketplaceapp.product.dto.UpdateProductRequest
 import com.daniel.marketplaceapp.product.mapper.toResponse
 import com.daniel.marketplaceapp.product.service.ProductService
 import jakarta.validation.Valid
+import org.springframework.http.HttpStatus
+import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import java.util.*
 
@@ -18,7 +21,10 @@ class ProductController(
     fun create(
         @Valid @RequestBody req: CreateProductRequest,
         @CurrentUserId currentUserId: UUID
-    ) = productService.create(req, currentUserId).toResponse()
+    ): ResponseEntity<ProductResponse> {
+        val product = productService.create(req, currentUserId).toResponse()
+        return ResponseEntity.status(HttpStatus.CREATED).body(product)
+    }
 
     @PutMapping("/{productId}")
     fun update(
@@ -31,8 +37,9 @@ class ProductController(
     fun delete(
         @PathVariable productId: UUID,
         @CurrentUserId currentUserId: UUID
-    ) {
+    ): ResponseEntity<Void> {
         productService.delete(productId, currentUserId)
+        return ResponseEntity.noContent().build()
     }
 
     @GetMapping(params = ["sellerId"])
