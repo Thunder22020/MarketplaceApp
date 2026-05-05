@@ -14,7 +14,7 @@ class UserSteps(
     fun createUser(
         username: String = randomUsername(),
         password: String = randomPassword()
-    ) = userService.save(
+    ) = userService.create(
         RegisterRequest(username, password)
     )
 

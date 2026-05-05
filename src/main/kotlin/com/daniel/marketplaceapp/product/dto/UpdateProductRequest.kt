@@ -1,6 +1,5 @@
 package com.daniel.marketplaceapp.product.dto
 
-import com.daniel.marketplaceapp.product.enums.ProductStatus
 import jakarta.validation.constraints.Positive
 import jakarta.validation.constraints.Size
 import java.math.BigDecimal
@@ -13,6 +12,4 @@ data class UpdateProductRequest(
 
     @field:Positive
     var price: BigDecimal? = null,
-
-    var status: ProductStatus? = null,
 )

@@ -4,6 +4,7 @@ import com.daniel.marketplaceapp.core.domain.Money
 import com.daniel.marketplaceapp.product.dto.CreateProductRequest
 import com.daniel.marketplaceapp.product.dto.UpdateProductRequest
 import com.daniel.marketplaceapp.product.enums.ProductStatus
+import com.daniel.marketplaceapp.product.exception.ProductAlreadyDeletedException
 import com.daniel.marketplaceapp.product.exception.ProductNotFoundException
 import com.daniel.marketplaceapp.product.mapper.updateFrom
 import com.daniel.marketplaceapp.product.model.Product
@@ -46,6 +47,16 @@ class ProductService(
         product.updatedAt = Instant.now()
     }
 
+    @Transactional
+    fun hide(productId: UUID, currentUserId: UUID) {
+        updateStatus(productId, currentUserId, ProductStatus.HIDDEN)
+    }
+
+    @Transactional
+    fun show(productId: UUID, currentUserId: UUID) {
+        updateStatus(productId, currentUserId, ProductStatus.ACTIVE)
+    }
+
     fun findAll() : List<Product> {
         return productRepository.findAllByStatusOrderByCreatedAtDesc(ProductStatus.ACTIVE)
     }
@@ -65,4 +76,19 @@ class ProductService(
         } else {
             listOf(ProductStatus.ACTIVE)
         }
+
+    private fun updateStatus(
+        productId: UUID,
+        currentUserId: UUID,
+        newStatus: ProductStatus
+    ) {
+        val product = findByIdAndSellerIdOrThrow(productId, currentUserId)
+
+        if (product.status == ProductStatus.DELETED) {
+            throw ProductAlreadyDeletedException("Product $productId has been deleted")
+        }
+
+        product.status = newStatus
+        product.updatedAt = Instant.now()
+    }
 }

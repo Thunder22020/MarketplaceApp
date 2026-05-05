@@ -11,7 +11,6 @@ fun Product.updateFrom(req: UpdateProductRequest) {
     req.title?.let { title = it }
     req.description?.let { description = it }
     req.price?.let { price = Money(it) }
-    req.status?.let { status = it }
     updatedAt = Instant.now()
 }
 

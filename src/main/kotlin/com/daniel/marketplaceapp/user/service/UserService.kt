@@ -14,7 +14,7 @@ class UserService(
     private val userRepository: UserRepository,
     private val encoder: PasswordEncoder
 ) {
-    fun save(dto: RegisterRequest): User {
+    fun create(dto: RegisterRequest): User {
         if (userRepository.findByUsername(dto.username) != null) {
             throw UserAlreadyExistsException("User already exists")
         }

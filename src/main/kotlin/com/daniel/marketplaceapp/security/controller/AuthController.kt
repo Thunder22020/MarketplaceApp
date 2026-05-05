@@ -21,7 +21,7 @@ class AuthController(
 ) {
     @PostMapping("/register")
     fun register(@Valid @RequestBody user: RegisterRequest) =
-        ResponseEntity.ok(userService.save(user).toResponse())
+        ResponseEntity.ok(userService.create(user).toResponse())
 
     @PostMapping("/login")
     fun login(@Valid @RequestBody user: LoginRequest) =

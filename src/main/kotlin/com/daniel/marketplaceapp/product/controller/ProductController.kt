@@ -42,6 +42,24 @@ class ProductController(
         return ResponseEntity.noContent().build()
     }
 
+    @PatchMapping("/{productId}/hide")
+    fun hide(
+        @PathVariable productId: UUID,
+        @CurrentUserId currentUserId: UUID
+    ): ResponseEntity<Void> {
+        productService.hide(productId, currentUserId)
+        return ResponseEntity.noContent().build()
+    }
+
+    @PatchMapping("/{productId}/show")
+    fun show(
+        @PathVariable productId: UUID,
+        @CurrentUserId currentUserId: UUID
+    ): ResponseEntity<Void> {
+        productService.show(productId, currentUserId)
+        return ResponseEntity.noContent().build()
+    }
+
     @GetMapping(params = ["sellerId"])
     fun getAllBySellerId(
         @RequestParam("sellerId", required = true) sellerId: UUID,
