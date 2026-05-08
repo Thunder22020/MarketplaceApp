@@ -36,6 +36,7 @@ class ProductService(
     @Transactional
     fun update(req: UpdateProductRequest, productId: UUID, sellerId: UUID): Product {
         val product = findByIdAndSellerIdOrThrow(productId, sellerId)
+        checkProductNotDeletedOrThrow(product)
         product.updateFrom(req)
         return product
     }
@@ -83,12 +84,14 @@ class ProductService(
         newStatus: ProductStatus
     ) {
         val product = findByIdAndSellerIdOrThrow(productId, currentUserId)
-
-        if (product.status == ProductStatus.DELETED) {
-            throw ProductAlreadyDeletedException("Product $productId has been deleted")
-        }
-
+        checkProductNotDeletedOrThrow(product)
         product.status = newStatus
         product.updatedAt = Instant.now()
+    }
+
+    private fun checkProductNotDeletedOrThrow(product: Product) {
+        if (product.status == ProductStatus.DELETED) {
+            throw ProductAlreadyDeletedException("Product ${product.id} has been deleted")
+        }
     }
 }
