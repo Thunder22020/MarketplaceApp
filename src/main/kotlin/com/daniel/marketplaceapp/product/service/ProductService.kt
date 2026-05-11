@@ -56,7 +56,7 @@ class ProductService(
     }
 
     @Transactional
-    fun show(productId: UUID, currentUserId: UUID) {
+    fun unhide(productId: UUID, currentUserId: UUID) {
         updateStatus(productId, currentUserId, ProductStatus.ACTIVE)
     }
 

@@ -1,7 +1,9 @@
 package com.daniel.marketplaceapp.product.service
 
 import com.daniel.marketplaceapp.product.dto.CreateProductRequest
+import com.daniel.marketplaceapp.product.dto.UpdateProductRequest
 import com.daniel.marketplaceapp.product.enums.ProductStatus
+import com.daniel.marketplaceapp.product.exception.EmptyUpdateProductRequestException
 import com.daniel.marketplaceapp.product.exception.ProductAlreadyDeletedException
 import com.daniel.marketplaceapp.product.exception.ProductNotFoundException
 import com.daniel.marketplaceapp.product.repository.ProductRepository
@@ -10,7 +12,10 @@ import com.daniel.marketplaceapp.testsupport.steps.ProductSteps
 import com.daniel.marketplaceapp.testsupport.steps.UserSteps
 import com.daniel.marketplaceapp.user.entity.User
 import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.inspectors.forAll
+import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldHaveSize
+import io.kotest.matchers.collections.shouldNotContainAll
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
@@ -88,6 +93,28 @@ class ProductServiceIntegrationTest {
     }
 
     @Test
+    fun `should show only active products on find all`() {
+        val sellerId = requireNotNull(userA.id)
+
+        val deletedProduct = productSteps.createProduct(sellerId = sellerId)
+        val hiddenProduct = productSteps.createProduct(sellerId = sellerId)
+        val activeProduct = productSteps.createProduct(sellerId = sellerId)
+
+        productService.delete(requireNotNull(deletedProduct.id), sellerId)
+        productService.hide(requireNotNull(hiddenProduct.id), sellerId)
+
+        val products = productService.findAll()
+
+        products.forAll {
+            it.status shouldBe ProductStatus.ACTIVE
+        }
+
+        val ids = products.map { it.id }
+        ids.shouldContain(activeProduct.id)
+        ids.shouldNotContainAll(listOf(deletedProduct.id, hiddenProduct.id))
+    }
+
+    @Test
     fun `should filter products for non seller when find all by seller`() {
         val customerId = requireNotNull(userA.id)
         val sellerId = requireNotNull(userB.id)
@@ -140,6 +167,7 @@ class ProductServiceIntegrationTest {
 
         val hiddenProduct = productRepository.findByIdOrNull(requireNotNull(product.id)).shouldNotBeNull()
 
+        hiddenProduct.updatedAt.shouldNotBeNull()
         hiddenProduct.title shouldBe product.title
         hiddenProduct.status shouldBe ProductStatus.HIDDEN
     }
@@ -149,16 +177,63 @@ class ProductServiceIntegrationTest {
         val sellerId = requireNotNull(userA.id)
         val product = productSteps.createProduct(sellerId = sellerId)
         productService.hide(requireNotNull(product.id), sellerId)
-        productService.show(requireNotNull(product.id), sellerId)
+        productService.unhide(requireNotNull(product.id), sellerId)
 
         val unhiddenProduct = productRepository.findByIdOrNull(requireNotNull(product.id)).shouldNotBeNull()
 
+        unhiddenProduct.updatedAt.shouldNotBeNull()
         unhiddenProduct.title shouldBe product.title
         unhiddenProduct.status shouldBe ProductStatus.ACTIVE
     }
 
     @Test
-    fun `should throw when hide or unhide deleted product`() {
+    fun `should update product`() {
+        val sellerId = requireNotNull(userA.id)
+        val productBeforeUpdate = productSteps.createProduct(sellerId = sellerId)
+        val productId = requireNotNull(productBeforeUpdate.id)
+
+        val req = UpdateProductRequest(
+            title = randomString(),
+            description = randomString(),
+            price = BigDecimal("150.00")
+        )
+        productService.update(req, productId, sellerId)
+
+        val productAfterUpdate = productRepository.findByIdOrNull(productId).shouldNotBeNull()
+
+        productAfterUpdate.id shouldBe productId
+        productAfterUpdate.title shouldBe req.title
+        productAfterUpdate.description shouldBe req.description
+        productAfterUpdate.price.amount shouldBe BigDecimal("150.00")
+    }
+
+    @Test
+    fun `should throw on empty update request`() {
+        val sellerId = requireNotNull(userA.id)
+        val product = productSteps.createProduct(sellerId = sellerId)
+        val productId = requireNotNull(product.id)
+
+        val emptyUpdateReq = UpdateProductRequest()
+        shouldThrow<EmptyUpdateProductRequestException>{
+            productService.update(emptyUpdateReq, productId, sellerId)
+        }
+    }
+
+    @Test
+    fun `should throw on update for non seller`() {
+        val sellerId = requireNotNull(userA.id)
+        val nonSellerId = requireNotNull(userB.id)
+        val product = productSteps.createProduct(sellerId = sellerId)
+        val productId = requireNotNull(product.id)
+
+        val req = UpdateProductRequest(title = randomString())
+        shouldThrow<ProductNotFoundException>{
+            productService.update(req, productId, nonSellerId)
+        }
+    }
+
+    @Test
+    fun `should throw when hide deleted product`() {
         val sellerId = requireNotNull(userA.id)
         val product = productSteps.createProduct(sellerId = sellerId)
         productService.delete(requireNotNull(product.id), sellerId)
@@ -166,8 +241,31 @@ class ProductServiceIntegrationTest {
         shouldThrow<ProductAlreadyDeletedException> {
             productService.hide(requireNotNull(product.id), sellerId)
         }
+    }
+
+    @Test
+    fun `should throw when unhide deleted product`() {
+        val sellerId = requireNotNull(userA.id)
+        val product = productSteps.createProduct(sellerId = sellerId)
+        productService.delete(requireNotNull(product.id), sellerId)
+
         shouldThrow<ProductAlreadyDeletedException> {
-            productService.show(requireNotNull(product.id), sellerId)
+            productService.unhide(requireNotNull(product.id), sellerId)
+        }
+    }
+
+    @Test
+    fun `should throw when update deleted product`() {
+        val sellerId = requireNotNull(userA.id)
+        val product = productSteps.createProduct(sellerId = sellerId)
+        productService.delete(requireNotNull(product.id), sellerId)
+
+        shouldThrow<ProductAlreadyDeletedException> {
+            productService.update(
+                req = UpdateProductRequest(title = randomString()),
+                productId = requireNotNull(product.id),
+                sellerId = sellerId
+            )
         }
     }
 
@@ -180,8 +278,16 @@ class ProductServiceIntegrationTest {
         shouldThrow<ProductNotFoundException> {
             productService.hide(requireNotNull(product.id), nonSellerId)
         }
+    }
+
+    @Test
+    fun `should throw when unhide by non seller`() {
+        val sellerId = requireNotNull(userA.id)
+        val nonSellerId = requireNotNull(userB.id)
+        val product = productSteps.createProduct(sellerId = sellerId)
+
         shouldThrow<ProductNotFoundException> {
-            productService.show(requireNotNull(product.id), nonSellerId)
+            productService.unhide(requireNotNull(product.id), nonSellerId)
         }
     }
 }

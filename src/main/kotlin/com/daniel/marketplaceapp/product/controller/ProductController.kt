@@ -51,12 +51,12 @@ class ProductController(
         return ResponseEntity.noContent().build()
     }
 
-    @PatchMapping("/{productId}/show")
-    fun show(
+    @PatchMapping("/{productId}/unhide")
+    fun unhide(
         @PathVariable productId: UUID,
         @CurrentUserId currentUserId: UUID
     ): ResponseEntity<Void> {
-        productService.show(productId, currentUserId)
+        productService.unhide(productId, currentUserId)
         return ResponseEntity.noContent().build()
     }
 
