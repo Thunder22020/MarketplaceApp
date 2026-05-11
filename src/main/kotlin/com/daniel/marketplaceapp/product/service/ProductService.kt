@@ -4,6 +4,7 @@ import com.daniel.marketplaceapp.core.domain.Money
 import com.daniel.marketplaceapp.product.dto.CreateProductRequest
 import com.daniel.marketplaceapp.product.dto.UpdateProductRequest
 import com.daniel.marketplaceapp.product.enums.ProductStatus
+import com.daniel.marketplaceapp.product.exception.EmptyUpdateProductRequestException
 import com.daniel.marketplaceapp.product.exception.ProductAlreadyDeletedException
 import com.daniel.marketplaceapp.product.exception.ProductNotFoundException
 import com.daniel.marketplaceapp.product.mapper.updateFrom
@@ -35,6 +36,7 @@ class ProductService(
 
     @Transactional
     fun update(req: UpdateProductRequest, productId: UUID, sellerId: UUID): Product {
+        checkUpdateReqIsEmpty(req)
         val product = findByIdAndSellerIdOrThrow(productId, sellerId)
         checkProductNotDeletedOrThrow(product)
         product.updateFrom(req)
@@ -87,6 +89,12 @@ class ProductService(
         checkProductNotDeletedOrThrow(product)
         product.status = newStatus
         product.updatedAt = Instant.now()
+    }
+
+    private fun checkUpdateReqIsEmpty(req: UpdateProductRequest) {
+        if (req.title == null && req.description == null && req.price == null) {
+            throw EmptyUpdateProductRequestException("Update product request is empty")
+        }
     }
 
     private fun checkProductNotDeletedOrThrow(product: Product) {
