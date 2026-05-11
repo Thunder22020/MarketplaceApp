@@ -25,4 +25,8 @@ class ProductSteps(
         )
         return productService.create(req, sellerId)
     }
+
+    fun hideProduct(productId: UUID, sellerId: UUID) {
+        productService.hide(productId, sellerId)
+    }
 }
