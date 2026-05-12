@@ -1,4 +1,4 @@
-package com.daniel.marketplaceapp.product.model
+package com.daniel.marketplaceapp.product.entity
 
 import com.daniel.marketplaceapp.core.domain.Money
 import com.daniel.marketplaceapp.product.enums.ProductStatus
@@ -9,7 +9,7 @@ import java.util.*
 
 @Entity
 @Table(name = "products")
-data class Product(
+class Product(
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(nullable = false, updatable = false)

@@ -1,7 +1,7 @@
 package com.daniel.marketplaceapp.product.repository
 
 import com.daniel.marketplaceapp.product.enums.ProductStatus
-import com.daniel.marketplaceapp.product.model.Product
+import com.daniel.marketplaceapp.product.entity.Product
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository

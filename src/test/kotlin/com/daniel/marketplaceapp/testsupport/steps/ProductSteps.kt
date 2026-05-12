@@ -1,7 +1,7 @@
 package com.daniel.marketplaceapp.testsupport.steps
 
 import com.daniel.marketplaceapp.product.dto.CreateProductRequest
-import com.daniel.marketplaceapp.product.model.Product
+import com.daniel.marketplaceapp.product.entity.Product
 import com.daniel.marketplaceapp.product.service.ProductService
 import com.daniel.marketplaceapp.testsupport.fixtures.randomString
 import org.springframework.stereotype.Component

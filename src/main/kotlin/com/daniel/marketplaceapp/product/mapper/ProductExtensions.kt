@@ -3,7 +3,7 @@ package com.daniel.marketplaceapp.product.mapper
 import com.daniel.marketplaceapp.core.domain.Money
 import com.daniel.marketplaceapp.product.dto.ProductResponse
 import com.daniel.marketplaceapp.product.dto.UpdateProductRequest
-import com.daniel.marketplaceapp.product.model.Product
+import com.daniel.marketplaceapp.product.entity.Product
 import java.time.Instant
 
 

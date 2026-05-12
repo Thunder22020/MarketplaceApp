@@ -8,7 +8,7 @@ import com.daniel.marketplaceapp.product.exception.EmptyUpdateProductRequestExce
 import com.daniel.marketplaceapp.product.exception.ProductAlreadyDeletedException
 import com.daniel.marketplaceapp.product.exception.ProductNotFoundException
 import com.daniel.marketplaceapp.product.mapper.updateFrom
-import com.daniel.marketplaceapp.product.model.Product
+import com.daniel.marketplaceapp.product.entity.Product
 import com.daniel.marketplaceapp.product.repository.ProductRepository
 import com.daniel.marketplaceapp.user.service.UserService
 import org.springframework.stereotype.Service
