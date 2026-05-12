@@ -1,7 +1,7 @@
-package com.daniel.marketplaceapp.order.model
+package com.daniel.marketplaceapp.order.entity
 
 import com.daniel.marketplaceapp.core.domain.Money
-import com.daniel.marketplaceapp.product.model.Product
+import com.daniel.marketplaceapp.product.entity.Product
 import jakarta.persistence.AttributeOverride
 import jakarta.persistence.Column
 import jakarta.persistence.Embedded
@@ -17,7 +17,7 @@ import java.util.UUID
 
 @Entity
 @Table(name = "order_items")
-data class OrderItem(
+class OrderItem(
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(nullable = false, updatable = false)

@@ -1,4 +1,4 @@
-package com.daniel.marketplaceapp.order.model
+package com.daniel.marketplaceapp.order.entity
 
 import com.daniel.marketplaceapp.core.domain.Money
 import com.daniel.marketplaceapp.order.enums.OrderStatus
@@ -23,7 +23,7 @@ import java.util.UUID
 
 @Entity
 @Table(name = "orders")
-data class Order(
+class Order(
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(nullable = false, updatable = false)
