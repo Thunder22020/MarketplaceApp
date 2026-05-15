@@ -20,6 +20,7 @@ import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
 import jakarta.persistence.OneToMany
 import jakarta.persistence.Table
+import jakarta.persistence.Version
 import java.time.Instant
 import java.util.UUID
 
@@ -59,6 +60,10 @@ class Order(
         orphanRemoval = true
     )
     var items: MutableList<OrderItem> = mutableListOf(),
+
+    @Version
+    @Column(nullable = false)
+    var version: Long? = null
 ) {
     fun addItemToCart(product: Product) {
         val existingItem = this.items.firstOrNull { it.product.id == product.id }
@@ -66,6 +71,7 @@ class Order(
         if (existingItem != null) {
             existingItem.quantity += 1
             this.totalAmount += existingItem.unitPrice
+            setUpdatedAt()
         } else {
             val orderItem = OrderItem(
                 product = product,
@@ -86,6 +92,7 @@ class Order(
         } else if (existingItem.quantity == 1) {
             removeItemFromCart(existingItem)
         }
+        setUpdatedAt()
     }
 
     private fun addItem(item: OrderItem) {
@@ -98,5 +105,9 @@ class Order(
         this.items.remove(item)
         item.order = null
         this.totalAmount -= item.unitPrice
+    }
+
+    private fun setUpdatedAt() {
+        this.updatedAt = Instant.now()
     }
 }
