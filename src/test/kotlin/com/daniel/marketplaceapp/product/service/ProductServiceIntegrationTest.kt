@@ -7,6 +7,7 @@ import com.daniel.marketplaceapp.product.exception.EmptyUpdateProductRequestExce
 import com.daniel.marketplaceapp.product.exception.ProductAlreadyDeletedException
 import com.daniel.marketplaceapp.product.exception.ProductNotFoundException
 import com.daniel.marketplaceapp.product.repository.ProductRepository
+import com.daniel.marketplaceapp.testsupport.annotations.ServiceIntegrationTest
 import com.daniel.marketplaceapp.testsupport.fixtures.randomString
 import com.daniel.marketplaceapp.testsupport.steps.ProductSteps
 import com.daniel.marketplaceapp.testsupport.steps.UserSteps
@@ -19,16 +20,13 @@ import io.kotest.matchers.collections.shouldNotContainAll
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.api.BeforeAll
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.data.repository.findByIdOrNull
 import java.math.BigDecimal
 import kotlin.test.Test
 
-@SpringBootTest
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+@ServiceIntegrationTest
 class ProductServiceIntegrationTest {
     @Autowired
     private lateinit var productService: ProductService
@@ -45,7 +43,7 @@ class ProductServiceIntegrationTest {
     private lateinit var userA: User
     private lateinit var userB: User
 
-    @BeforeEach
+    @BeforeAll
     fun setUp() {
         userA = userSteps.createUser()
         userB = userSteps.createUser()

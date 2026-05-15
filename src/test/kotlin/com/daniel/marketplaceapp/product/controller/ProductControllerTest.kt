@@ -6,6 +6,7 @@ import com.daniel.marketplaceapp.product.enums.ProductStatus
 import com.daniel.marketplaceapp.product.repository.ProductRepository
 import com.daniel.marketplaceapp.security.dto.AccessTokenResponse
 import com.daniel.marketplaceapp.security.util.JwtConstants
+import com.daniel.marketplaceapp.testsupport.annotations.ControllerIntegrationTest
 import com.daniel.marketplaceapp.testsupport.fixtures.TOO_SHORT_VALUE
 import com.daniel.marketplaceapp.testsupport.fixtures.randomPassword
 import com.daniel.marketplaceapp.testsupport.fixtures.randomString
@@ -17,10 +18,8 @@ import com.daniel.marketplaceapp.user.entity.User
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
-import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.BeforeAll
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
-import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
@@ -36,8 +35,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import java.math.BigDecimal
 import kotlin.test.Test
 
-@SpringBootTest
-@AutoConfigureMockMvc
+@ControllerIntegrationTest
 class ProductControllerTest {
     @Autowired
     private lateinit var mockMvc: MockMvc
@@ -59,7 +57,7 @@ class ProductControllerTest {
     private lateinit var userAToken: String
     private lateinit var userBToken: String
 
-    @BeforeEach
+    @BeforeAll
     fun setUp() {
         val passwordA = randomPassword()
         val passwordB = randomPassword()

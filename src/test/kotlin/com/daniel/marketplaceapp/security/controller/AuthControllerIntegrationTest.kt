@@ -1,24 +1,24 @@
 package com.daniel.marketplaceapp.security.controller
 
+import com.daniel.marketplaceapp.testsupport.annotations.ControllerIntegrationTest
 import com.daniel.marketplaceapp.testsupport.fixtures.TOO_SHORT_VALUE
+import com.daniel.marketplaceapp.testsupport.fixtures.TestUser
 import com.daniel.marketplaceapp.testsupport.fixtures.randomPassword
 import com.daniel.marketplaceapp.testsupport.fixtures.randomUsername
 import com.daniel.marketplaceapp.testsupport.steps.UserSteps
 import com.daniel.marketplaceapp.user.dto.request.LoginRequest
 import com.daniel.marketplaceapp.user.dto.request.RegisterRequest
 import com.fasterxml.jackson.databind.ObjectMapper
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
-import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.http.MediaType
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 
-@SpringBootTest
-@AutoConfigureMockMvc
+@ControllerIntegrationTest
 class AuthControllerIntegrationTest {
     @Autowired
     private lateinit var mockMvc: MockMvc
@@ -28,6 +28,13 @@ class AuthControllerIntegrationTest {
 
     @Autowired
     private lateinit var userSteps: UserSteps
+
+    private lateinit var registeredUser: TestUser
+
+    @BeforeAll
+    fun setUp() {
+        registeredUser = userSteps.createRandomUser()
+    }
 
     @Test
     fun `should register new user`() {
@@ -45,8 +52,7 @@ class AuthControllerIntegrationTest {
 
     @Test
     fun `should return conflict when register the existing user`() {
-        val (username, password) = userSteps.createRandomUser()
-        val request = RegisterRequest(username, password)
+        val request = RegisterRequest(registeredUser.username, registeredUser.password)
 
         mockMvc.perform(
             post(REGISTER_URL)
@@ -89,8 +95,7 @@ class AuthControllerIntegrationTest {
 
     @Test
     fun `should login existing user`() {
-        val (username, password) = userSteps.createRandomUser()
-        val loginRequest = LoginRequest(username, password)
+        val loginRequest = LoginRequest(registeredUser.username, registeredUser.password)
 
         mockMvc.perform(
             post(LOGIN_URL)
@@ -117,9 +122,8 @@ class AuthControllerIntegrationTest {
 
     @Test
     fun `should return unauthorized when login with wrong password`() {
-        val (username, correctPassword) = userSteps.createRandomUser()
-        val wrongPassword = "${correctPassword}_wrong"
-        val loginRequest = LoginRequest(username, wrongPassword)
+        val wrongPassword = randomPassword()
+        val loginRequest = LoginRequest(registeredUser.username, wrongPassword)
 
         mockMvc.perform(
             post(LOGIN_URL)
