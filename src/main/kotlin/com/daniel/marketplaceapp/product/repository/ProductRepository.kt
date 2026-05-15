@@ -12,6 +12,8 @@ interface ProductRepository : JpaRepository<Product, UUID> {
     @Query("SELECT p FROM Product p WHERE p.id = :id AND p.seller.id = :sellerId")
     fun findByIdAndSellerId(id: UUID, sellerId: UUID): Product?
 
+    fun findByIdAndStatusIs(id: UUID, status: ProductStatus): Product?
+
     fun findAllByStatusOrderByCreatedAtDesc(status: ProductStatus): List<Product>
 
     fun findAllBySellerIdAndStatusInOrderByCreatedAtDesc(

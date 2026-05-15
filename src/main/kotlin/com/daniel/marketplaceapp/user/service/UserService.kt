@@ -27,7 +27,7 @@ class UserService(
         return userRepository.save(entity)
     }
 
-    fun findByIdOrThrow(id: UUID): User =
+    fun getByIdOrThrow(id: UUID): User =
         userRepository.findById(id).orElseThrow {
             UserNotFoundException("User with ID:$id not found")
         }
