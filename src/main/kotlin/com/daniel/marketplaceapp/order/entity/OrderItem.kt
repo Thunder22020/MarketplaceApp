@@ -40,4 +40,6 @@ class OrderItem(
 
     @Column(nullable = false)
     var quantity: Int,
-)
+) {
+    fun totalPrice() = this.unitPrice * this.quantity
+}
