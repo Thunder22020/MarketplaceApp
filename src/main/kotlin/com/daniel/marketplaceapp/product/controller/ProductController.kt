@@ -64,8 +64,8 @@ class ProductController(
     fun getAllBySellerId(
         @RequestParam("sellerId", required = true) sellerId: UUID,
         @CurrentUserId currentUserId: UUID
-    ) = productService.findAllBySellerId(sellerId, currentUserId).map { it.toResponse() }
+    ) = productService.getAllBySellerId(sellerId, currentUserId).map { it.toResponse() }
 
     @GetMapping
-    fun getAll() = productService.findAll().map { it.toResponse() }
+    fun getAll() = productService.getAll().map { it.toResponse() }
 }

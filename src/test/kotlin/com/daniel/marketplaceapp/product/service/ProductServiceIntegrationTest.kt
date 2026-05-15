@@ -103,7 +103,7 @@ class ProductServiceIntegrationTest {
         productService.delete(requireNotNull(deletedProduct.id), sellerId)
         productService.hide(requireNotNull(hiddenProduct.id), sellerId)
 
-        val products = productService.findAll()
+        val products = productService.getAll()
 
         products.forAll {
             it.status shouldBe ProductStatus.ACTIVE
@@ -126,7 +126,7 @@ class ProductServiceIntegrationTest {
         productService.delete(requireNotNull(product1.id), sellerId)
         productService.hide(requireNotNull(product2.id), sellerId)
 
-        val foundProducts = productService.findAllBySellerId(sellerId, customerId)
+        val foundProducts = productService.getAllBySellerId(sellerId, customerId)
         foundProducts.shouldHaveSize(1)
 
         val onlyProductFound = foundProducts[0]
@@ -146,7 +146,7 @@ class ProductServiceIntegrationTest {
         productService.delete(requireNotNull(deletedProduct.id), sellerId)
         productService.hide(requireNotNull(hiddenProduct.id), sellerId)
 
-        val foundProducts = productService.findAllBySellerId(sellerId, sellerId)
+        val foundProducts = productService.getAllBySellerId(sellerId, sellerId)
         foundProducts.shouldHaveSize(2)
 
         val foundHiddenProduct = foundProducts.first { it.id == hiddenProduct.id }

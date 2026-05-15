@@ -2,6 +2,8 @@ package com.daniel.marketplaceapp.order.entity
 
 import com.daniel.marketplaceapp.core.domain.Money
 import com.daniel.marketplaceapp.order.enums.OrderStatus
+import com.daniel.marketplaceapp.order.exception.OrderItemNotFoundException
+import com.daniel.marketplaceapp.product.entity.Product
 import com.daniel.marketplaceapp.user.entity.User
 import jakarta.persistence.AttributeOverride
 import jakarta.persistence.CascadeType
@@ -57,4 +59,44 @@ class Order(
         orphanRemoval = true
     )
     var items: MutableList<OrderItem> = mutableListOf(),
-)
+) {
+    fun addItemToCart(product: Product) {
+        val existingItem = this.items.firstOrNull { it.product.id == product.id }
+
+        if (existingItem != null) {
+            existingItem.quantity += 1
+            this.totalAmount += existingItem.unitPrice
+        } else {
+            val orderItem = OrderItem(
+                product = product,
+                unitPrice = product.price.copy(),
+                quantity = 1
+            )
+            this.addItem(orderItem)
+        }
+    }
+
+    fun deleteItemFromCart(productId: UUID) {
+        val existingItem = this.items.firstOrNull { it.product.id == productId }
+            ?: throw OrderItemNotFoundException("Order item for product $productId not found")
+
+        if (existingItem.quantity > 1) {
+            existingItem.quantity -= 1
+            this.totalAmount -= existingItem.unitPrice
+        } else if (existingItem.quantity == 1) {
+            removeItemFromCart(existingItem)
+        }
+    }
+
+    private fun addItem(item: OrderItem) {
+        this.items.add(item)
+        item.order = this
+        this.totalAmount += item.unitPrice
+    }
+
+    private fun removeItemFromCart(item: OrderItem) {
+        this.items.remove(item)
+        item.order = null
+        this.totalAmount -= item.unitPrice
+    }
+}

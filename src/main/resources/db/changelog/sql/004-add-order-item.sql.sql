@@ -7,7 +7,7 @@ CREATE TABLE order_items
     order_id               UUID           NOT NULL,
     product_id             UUID           NOT NULL,
     quantity               INTEGER        NOT NULL,
-    unit_price_at_purchase DECIMAL(19, 2) NOT NULL,
+    unit_price DECIMAL(19, 2) NOT NULL,
     CONSTRAINT pk_order_items PRIMARY KEY (id)
 );
 

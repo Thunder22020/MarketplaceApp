@@ -17,7 +17,7 @@ class UserController(
 ) {
     @GetMapping("/{id}")
     fun getUser(@PathVariable id: UUID): ResponseEntity<SearchResponse> {
-        val user = userService.findByIdOrThrow(id)
+        val user = userService.getByIdOrThrow(id)
         return ResponseEntity.ok(user.toSearchResponse())
     }
 }

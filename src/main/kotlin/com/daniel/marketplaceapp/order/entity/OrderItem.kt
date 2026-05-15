@@ -25,7 +25,7 @@ class OrderItem(
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "order_id", referencedColumnName = "id", nullable = false)
-    var order: Order,
+    var order: Order? = null,
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "product_id", referencedColumnName = "id", nullable = false)
@@ -34,9 +34,9 @@ class OrderItem(
     @Embedded
     @AttributeOverride(
         name = "amount",
-        column = Column(name = "unit_price_at_purchase", nullable = false, precision = 19, scale = 2)
+        column = Column(name = "unit_price", nullable = false, precision = 19, scale = 2)
     )
-    var unitPriceAtPurchase: Money,
+    var unitPrice: Money,
 
     @Column(nullable = false)
     var quantity: Int,

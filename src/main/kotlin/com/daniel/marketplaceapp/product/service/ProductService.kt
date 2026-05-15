@@ -23,7 +23,7 @@ class ProductService(
 ) {
     @Transactional
     fun create(req: CreateProductRequest, sellerId: UUID): Product {
-        val seller = userService.findByIdOrThrow(sellerId)
+        val seller = userService.getByIdOrThrow(sellerId)
         val product = Product(
             title = req.title,
             description = req.description,
@@ -37,7 +37,7 @@ class ProductService(
     @Transactional
     fun update(req: UpdateProductRequest, productId: UUID, sellerId: UUID): Product {
         checkUpdateReqIsEmpty(req)
-        val product = findByIdAndSellerIdOrThrow(productId, sellerId)
+        val product = getByIdAndSellerIdOrThrow(productId, sellerId)
         checkProductNotDeletedOrThrow(product)
         product.updateFrom(req)
         return product
@@ -45,7 +45,7 @@ class ProductService(
 
     @Transactional
     fun delete(productId: UUID, sellerId: UUID) {
-        val product = findByIdAndSellerIdOrThrow(productId, sellerId)
+        val product = getByIdAndSellerIdOrThrow(productId, sellerId)
         product.status = ProductStatus.DELETED
         product.updatedAt = Instant.now()
     }
@@ -60,16 +60,21 @@ class ProductService(
         updateStatus(productId, currentUserId, ProductStatus.ACTIVE)
     }
 
-    fun findAll() : List<Product> {
+    fun getAll() : List<Product> {
         return productRepository.findAllByStatusOrderByCreatedAtDesc(ProductStatus.ACTIVE)
     }
 
-    fun findAllBySellerId(sellerId: UUID, currentUserId: UUID): List<Product> {
+    fun getAllBySellerId(sellerId: UUID, currentUserId: UUID): List<Product> {
         val visibleStatuses = getVisibleStatuses(sellerId, currentUserId)
         return productRepository.findAllBySellerIdAndStatusInOrderByCreatedAtDesc(sellerId, visibleStatuses)
     }
 
-    private fun findByIdAndSellerIdOrThrow(id: UUID, sellerId: UUID) =
+    fun getByIdOrThrow(id: UUID): Product {
+        return productRepository.findByIdAndStatusIs(id, ProductStatus.ACTIVE)
+            ?: throw ProductNotFoundException("Product with id $id not found")
+    }
+
+    private fun getByIdAndSellerIdOrThrow(id: UUID, sellerId: UUID) =
         productRepository.findByIdAndSellerId(id, sellerId)
             ?: throw ProductNotFoundException("Product with id $id not found")
 
@@ -85,7 +90,7 @@ class ProductService(
         currentUserId: UUID,
         newStatus: ProductStatus
     ) {
-        val product = findByIdAndSellerIdOrThrow(productId, currentUserId)
+        val product = getByIdAndSellerIdOrThrow(productId, currentUserId)
         checkProductNotDeletedOrThrow(product)
         product.status = newStatus
         product.updatedAt = Instant.now()
