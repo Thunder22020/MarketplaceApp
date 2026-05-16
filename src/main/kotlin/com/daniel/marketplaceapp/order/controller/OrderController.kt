@@ -2,8 +2,7 @@ package com.daniel.marketplaceapp.order.controller
 
 import com.daniel.marketplaceapp.core.annotations.CurrentUserId
 import com.daniel.marketplaceapp.order.dto.OrderItemResponse
-import com.daniel.marketplaceapp.order.entity.OrderItem
-import com.daniel.marketplaceapp.order.mapper.toResponse
+import com.daniel.marketplaceapp.order.mapper.OrderMapper
 import com.daniel.marketplaceapp.order.service.OrderService
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.DeleteMapping
@@ -21,7 +20,7 @@ class OrderController(
 ) {
     @GetMapping
     fun getCartItems(@CurrentUserId customerId: UUID): List<OrderItemResponse> {
-        return orderService.getCartItems(customerId).map { it.toResponse() }
+        return orderService.getCartItems(customerId).map { OrderMapper.toResponse(it) }
     }
 
     @PostMapping("/{productId}")

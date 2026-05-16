@@ -1,36 +1,36 @@
 package com.daniel.marketplaceapp.order.service
 
 import com.daniel.marketplaceapp.core.domain.Money
-import com.daniel.marketplaceapp.order.entity.Order
-import com.daniel.marketplaceapp.order.entity.OrderItem
+import com.daniel.marketplaceapp.order.domain.Order
+import com.daniel.marketplaceapp.order.domain.OrderItem
 import com.daniel.marketplaceapp.order.enums.OrderStatus
 import com.daniel.marketplaceapp.order.exception.OrderNotFoundException
 import com.daniel.marketplaceapp.order.repository.OrderRepository
+import com.daniel.marketplaceapp.product.mapper.toDomain
 import com.daniel.marketplaceapp.product.service.ProductService
-import com.daniel.marketplaceapp.user.service.UserService
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import java.math.BigDecimal
+import java.time.Instant
 import java.util.UUID
 
 @Service
 class OrderService(
     private val orderRepository: OrderRepository,
     private val productService: ProductService,
-    private val userService: UserService,
 ) {
     @Transactional
     fun addItemToCart(productId: UUID, customerId: UUID): Order {
         val order = getOrCreateDraftOrder(customerId)
-        val product = productService.getByIdOrThrow(productId)
+        val product = productService.getByIdOrThrow(productId).toDomain()
         order.addItemToCart(product)
-        return order
+        return orderRepository.save(order)
     }
 
     @Transactional
     fun deleteItemFromCart(productId: UUID, customerId: UUID) {
         val order = getDraftOrderOrThrow(customerId)
         order.deleteItemFromCart(productId)
+        orderRepository.save(order)
     }
 
     @Transactional(readOnly = true)
@@ -44,17 +44,20 @@ class OrderService(
     }
 
     private fun getDraftOrder(customerId: UUID): Order? {
-        return orderRepository.findDraftByCustomerIdWithItems(customerId)
+        return orderRepository.findDraftByCustomerId(customerId)
     }
 
     private fun createDraftOrder(customerId: UUID): Order {
-        val customer = userService.getByIdOrThrow(customerId)
-        val order = Order(
+        return Order(
             status = OrderStatus.DRAFT,
-            totalAmount = Money(BigDecimal.ZERO),
-            customer = customer,
+            totalAmount = Money.ZERO,
+            customerId = customerId,
+            id = null,
+            createdAt = Instant.now(),
+            updatedAt = null,
+            items = mutableListOf(),
+            version = null,
         )
-        return orderRepository.save(order)
     }
 
     private fun getDraftOrderOrThrow(customerId: UUID): Order {

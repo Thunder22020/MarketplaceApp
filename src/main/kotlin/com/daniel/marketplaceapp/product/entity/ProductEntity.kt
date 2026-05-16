@@ -9,7 +9,7 @@ import java.util.*
 
 @Entity
 @Table(name = "products")
-class Product(
+class ProductEntity(
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(nullable = false, updatable = false)
