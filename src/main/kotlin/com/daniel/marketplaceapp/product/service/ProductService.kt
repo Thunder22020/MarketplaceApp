@@ -8,7 +8,7 @@ import com.daniel.marketplaceapp.product.exception.EmptyUpdateProductRequestExce
 import com.daniel.marketplaceapp.product.exception.ProductAlreadyDeletedException
 import com.daniel.marketplaceapp.product.exception.ProductNotFoundException
 import com.daniel.marketplaceapp.product.mapper.updateFrom
-import com.daniel.marketplaceapp.product.entity.Product
+import com.daniel.marketplaceapp.product.entity.ProductEntity
 import com.daniel.marketplaceapp.product.repository.ProductRepository
 import com.daniel.marketplaceapp.user.service.UserService
 import org.springframework.stereotype.Service
@@ -22,9 +22,9 @@ class ProductService(
     private val userService: UserService
 ) {
     @Transactional
-    fun create(req: CreateProductRequest, sellerId: UUID): Product {
+    fun create(req: CreateProductRequest, sellerId: UUID): ProductEntity {
         val seller = userService.getByIdOrThrow(sellerId)
-        val product = Product(
+        val product = ProductEntity(
             title = req.title,
             description = req.description,
             price = Money(req.price),
@@ -35,7 +35,7 @@ class ProductService(
     }
 
     @Transactional
-    fun update(req: UpdateProductRequest, productId: UUID, sellerId: UUID): Product {
+    fun update(req: UpdateProductRequest, productId: UUID, sellerId: UUID): ProductEntity {
         checkUpdateReqIsEmpty(req)
         val product = getByIdAndSellerIdOrThrow(productId, sellerId)
         checkProductNotDeletedOrThrow(product)
@@ -60,16 +60,16 @@ class ProductService(
         updateStatus(productId, currentUserId, ProductStatus.ACTIVE)
     }
 
-    fun getAll() : List<Product> {
+    fun getAll() : List<ProductEntity> {
         return productRepository.findAllByStatusOrderByCreatedAtDesc(ProductStatus.ACTIVE)
     }
 
-    fun getAllBySellerId(sellerId: UUID, currentUserId: UUID): List<Product> {
+    fun getAllBySellerId(sellerId: UUID, currentUserId: UUID): List<ProductEntity> {
         val visibleStatuses = getVisibleStatuses(sellerId, currentUserId)
         return productRepository.findAllBySellerIdAndStatusInOrderByCreatedAtDesc(sellerId, visibleStatuses)
     }
 
-    fun getByIdOrThrow(id: UUID): Product {
+    fun getByIdOrThrow(id: UUID): ProductEntity {
         return productRepository.findByIdAndStatusIs(id, ProductStatus.ACTIVE)
             ?: throw ProductNotFoundException("Product with id $id not found")
     }
@@ -102,7 +102,7 @@ class ProductService(
         }
     }
 
-    private fun checkProductNotDeletedOrThrow(product: Product) {
+    private fun checkProductNotDeletedOrThrow(product: ProductEntity) {
         if (product.status == ProductStatus.DELETED) {
             throw ProductAlreadyDeletedException("Product ${product.id} has been deleted")
         }

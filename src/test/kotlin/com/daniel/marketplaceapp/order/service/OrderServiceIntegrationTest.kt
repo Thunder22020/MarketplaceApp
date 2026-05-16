@@ -4,7 +4,7 @@ import com.daniel.marketplaceapp.core.domain.Money
 import com.daniel.marketplaceapp.order.enums.OrderStatus
 import com.daniel.marketplaceapp.order.exception.OrderItemNotFoundException
 import com.daniel.marketplaceapp.order.exception.OrderNotFoundException
-import com.daniel.marketplaceapp.order.repository.OrderRepository
+import com.daniel.marketplaceapp.order.repository.SpringDataOrderRepository
 import com.daniel.marketplaceapp.testsupport.steps.ProductSteps
 import com.daniel.marketplaceapp.testsupport.steps.UserSteps
 import io.kotest.assertions.throwables.shouldThrow
@@ -29,7 +29,7 @@ class OrderServiceIntegrationTest {
     private lateinit var orderService: OrderService
 
     @Autowired
-    private lateinit var orderRepository: OrderRepository
+    private lateinit var orderRepository: SpringDataOrderRepository
 
     @Autowired
     private lateinit var userSteps: UserSteps
@@ -160,8 +160,8 @@ class OrderServiceIntegrationTest {
         orderItems.shouldHaveSize(2)
         order.totalAmount.amount shouldBe orderItems.sumOf { it.totalPrice().amount }
 
-        val orderItem1 = orderItems.single { it.product.id == product1.id }
-        val orderItem2 = orderItems.single { it.product.id == product2.id }
+        val orderItem1 = orderItems.single { it.productId == product1.id }
+        val orderItem2 = orderItems.single { it.productId == product2.id }
 
         orderItem1.quantity shouldBe 2
         orderItem2.quantity shouldBe 1

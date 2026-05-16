@@ -1,7 +1,7 @@
 package com.daniel.marketplaceapp.order.entity
 
 import com.daniel.marketplaceapp.core.domain.Money
-import com.daniel.marketplaceapp.product.entity.Product
+import com.daniel.marketplaceapp.product.entity.ProductEntity
 import jakarta.persistence.AttributeOverride
 import jakarta.persistence.Column
 import jakarta.persistence.Embedded
@@ -17,7 +17,7 @@ import java.util.UUID
 
 @Entity
 @Table(name = "order_items")
-class OrderItem(
+class OrderItemEntity(
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(nullable = false, updatable = false)
@@ -25,11 +25,11 @@ class OrderItem(
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "order_id", referencedColumnName = "id", nullable = false)
-    var order: Order? = null,
+    var order: OrderEntity? = null,
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "product_id", referencedColumnName = "id", nullable = false)
-    var product: Product,
+    var product: ProductEntity,
 
     @Embedded
     @AttributeOverride(
