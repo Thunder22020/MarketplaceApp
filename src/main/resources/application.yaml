@@ -28,3 +28,5 @@ app:
   jwt:
     secret-key: ${JWT_SECRET}
     access-expiration: 3600000
+  service-type:
+    db: "jooq"

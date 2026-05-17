@@ -2,10 +2,12 @@ package com.daniel.marketplaceapp.product.repository
 
 import com.daniel.marketplaceapp.product.domain.Product
 import com.daniel.marketplaceapp.product.enums.ProductStatus
-import java.util.UUID
+import java.util.*
 
 interface ProductRepository {
     fun save(product: Product): Product
+
+    fun findById(id: UUID): Product?
 
     fun findByIdAndSellerId(id: UUID, sellerId: UUID): Product?
 
