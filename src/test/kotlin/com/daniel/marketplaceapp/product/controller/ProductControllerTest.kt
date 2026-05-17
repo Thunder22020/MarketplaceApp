@@ -3,7 +3,7 @@ package com.daniel.marketplaceapp.product.controller
 import com.daniel.marketplaceapp.product.dto.CreateProductRequest
 import com.daniel.marketplaceapp.product.dto.UpdateProductRequest
 import com.daniel.marketplaceapp.product.enums.ProductStatus
-import com.daniel.marketplaceapp.product.repository.ProductRepository
+import com.daniel.marketplaceapp.product.repository.SpringDataProductRepository
 import com.daniel.marketplaceapp.security.dto.AccessTokenResponse
 import com.daniel.marketplaceapp.security.util.JwtConstants
 import com.daniel.marketplaceapp.testsupport.annotations.ControllerIntegrationTest
@@ -50,7 +50,7 @@ class ProductControllerTest {
     private lateinit var productSteps: ProductSteps
 
     @Autowired
-    private lateinit var productRepository: ProductRepository
+    private lateinit var productRepository: SpringDataProductRepository
 
     private lateinit var userA: User
     private lateinit var userB: User

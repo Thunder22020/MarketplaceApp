@@ -6,7 +6,7 @@ import com.daniel.marketplaceapp.product.enums.ProductStatus
 import com.daniel.marketplaceapp.product.exception.EmptyUpdateProductRequestException
 import com.daniel.marketplaceapp.product.exception.ProductAlreadyDeletedException
 import com.daniel.marketplaceapp.product.exception.ProductNotFoundException
-import com.daniel.marketplaceapp.product.repository.ProductRepository
+import com.daniel.marketplaceapp.product.repository.SpringDataProductRepository
 import com.daniel.marketplaceapp.testsupport.annotations.ServiceIntegrationTest
 import com.daniel.marketplaceapp.testsupport.fixtures.randomString
 import com.daniel.marketplaceapp.testsupport.steps.ProductSteps
@@ -32,7 +32,7 @@ class ProductServiceIntegrationTest {
     private lateinit var productService: ProductService
 
     @Autowired
-    private lateinit var productRepository: ProductRepository
+    private lateinit var productRepository: SpringDataProductRepository
 
     @Autowired
     private lateinit var userSteps: UserSteps
@@ -130,7 +130,7 @@ class ProductServiceIntegrationTest {
         val onlyProductFound = foundProducts[0]
         onlyProductFound.id shouldBe product3.id
         onlyProductFound.title shouldBe product3.title
-        onlyProductFound.seller.id shouldBe sellerId
+        onlyProductFound.sellerId shouldBe sellerId
     }
 
     @Test

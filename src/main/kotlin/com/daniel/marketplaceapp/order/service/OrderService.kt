@@ -6,7 +6,6 @@ import com.daniel.marketplaceapp.order.domain.OrderItem
 import com.daniel.marketplaceapp.order.enums.OrderStatus
 import com.daniel.marketplaceapp.order.exception.OrderNotFoundException
 import com.daniel.marketplaceapp.order.repository.OrderRepository
-import com.daniel.marketplaceapp.product.mapper.toDomain
 import com.daniel.marketplaceapp.product.service.ProductService
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -21,7 +20,7 @@ class OrderService(
     @Transactional
     fun addItemToCart(productId: UUID, customerId: UUID): Order {
         val order = getOrCreateDraftOrder(customerId)
-        val product = productService.getByIdOrThrow(productId).toDomain()
+        val product = productService.getByIdOrThrow(productId)
         order.addItemToCart(product)
         return orderRepository.save(order)
     }

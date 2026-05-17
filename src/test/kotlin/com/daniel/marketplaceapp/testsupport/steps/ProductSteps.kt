@@ -1,7 +1,7 @@
 package com.daniel.marketplaceapp.testsupport.steps
 
+import com.daniel.marketplaceapp.product.domain.Product
 import com.daniel.marketplaceapp.product.dto.CreateProductRequest
-import com.daniel.marketplaceapp.product.entity.ProductEntity
 import com.daniel.marketplaceapp.product.service.ProductService
 import com.daniel.marketplaceapp.testsupport.fixtures.randomString
 import org.springframework.stereotype.Component
@@ -17,7 +17,7 @@ class ProductSteps(
         title: String = randomString(),
         description: String? = randomString(),
         price: BigDecimal = BigDecimal("100.00"),
-    ): ProductEntity {
+    ): Product {
         val req = CreateProductRequest(
             title = title,
             description = description,

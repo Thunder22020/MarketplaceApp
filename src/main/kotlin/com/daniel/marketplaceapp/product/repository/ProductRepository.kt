@@ -1,23 +1,20 @@
 package com.daniel.marketplaceapp.product.repository
 
+import com.daniel.marketplaceapp.product.domain.Product
 import com.daniel.marketplaceapp.product.enums.ProductStatus
-import com.daniel.marketplaceapp.product.entity.ProductEntity
-import org.springframework.data.jpa.repository.JpaRepository
-import org.springframework.data.jpa.repository.Query
-import org.springframework.stereotype.Repository
 import java.util.UUID
 
-@Repository
-interface ProductRepository : JpaRepository<ProductEntity, UUID> {
-    @Query("SELECT p FROM ProductEntity p WHERE p.id = :id AND p.seller.id = :sellerId")
-    fun findByIdAndSellerId(id: UUID, sellerId: UUID): ProductEntity?
+interface ProductRepository {
+    fun save(product: Product): Product
 
-    fun findByIdAndStatusIs(id: UUID, status: ProductStatus): ProductEntity?
+    fun findByIdAndSellerId(id: UUID, sellerId: UUID): Product?
 
-    fun findAllByStatusOrderByCreatedAtDesc(status: ProductStatus): List<ProductEntity>
+    fun findByIdAndStatus(id: UUID, status: ProductStatus): Product?
 
-    fun findAllBySellerIdAndStatusInOrderByCreatedAtDesc(
+    fun findAllByStatus(status: ProductStatus): List<Product>
+
+    fun findAllBySellerIdAndStatusList(
         sellerId: UUID,
         statusList: Collection<ProductStatus>,
-    ): List<ProductEntity>
+    ): List<Product>
 }

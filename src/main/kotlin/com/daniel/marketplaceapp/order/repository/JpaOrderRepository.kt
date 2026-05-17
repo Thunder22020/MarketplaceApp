@@ -2,7 +2,7 @@ package com.daniel.marketplaceapp.order.repository
 
 import com.daniel.marketplaceapp.order.domain.Order
 import com.daniel.marketplaceapp.order.mapper.OrderMapper
-import com.daniel.marketplaceapp.product.repository.ProductRepository
+import com.daniel.marketplaceapp.product.repository.SpringDataProductRepository
 import com.daniel.marketplaceapp.user.exception.UserNotFoundException
 import com.daniel.marketplaceapp.user.repository.UserRepository
 import org.springframework.data.repository.findByIdOrNull
@@ -13,7 +13,7 @@ import java.util.UUID
 class JpaOrderRepository(
     private val springDataOrderRepository: SpringDataOrderRepository,
     private val userRepository: UserRepository,
-    private val productRepository: ProductRepository
+    private val productRepository: SpringDataProductRepository
 ) : OrderRepository {
     override fun findDraftByCustomerId(customerId: UUID): Order? {
         val order = springDataOrderRepository.findDraftByCustomerIdWithItems(customerId)
