@@ -6,11 +6,13 @@ import com.daniel.marketplaceapp.product.mapper.toDomain
 import com.daniel.marketplaceapp.product.mapper.toEntity
 import com.daniel.marketplaceapp.user.exception.UserNotFoundException
 import com.daniel.marketplaceapp.user.repository.UserRepository
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Repository
-import java.util.UUID
+import java.util.*
 
 @Repository
+@ConditionalOnProperty(name = ["app.service-type.db"], havingValue = "jpa", matchIfMissing = true)
 class JpaProductRepository(
     private val springDataProductRepository: SpringDataProductRepository,
     private val userRepository: UserRepository,
@@ -20,6 +22,9 @@ class JpaProductRepository(
         val productEntity = product.toEntity(seller)
         return springDataProductRepository.save(productEntity).toDomain()
     }
+
+    override fun findById(id: UUID) =
+        springDataProductRepository.findByIdOrNull(id)?.toDomain()
 
     private fun findSellerOrThrow(sellerId: UUID) =
         userRepository.findByIdOrNull(sellerId)

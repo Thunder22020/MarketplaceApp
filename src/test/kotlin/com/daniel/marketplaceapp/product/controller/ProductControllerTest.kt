@@ -3,7 +3,7 @@ package com.daniel.marketplaceapp.product.controller
 import com.daniel.marketplaceapp.product.dto.CreateProductRequest
 import com.daniel.marketplaceapp.product.dto.UpdateProductRequest
 import com.daniel.marketplaceapp.product.enums.ProductStatus
-import com.daniel.marketplaceapp.product.repository.SpringDataProductRepository
+import com.daniel.marketplaceapp.product.repository.ProductRepository
 import com.daniel.marketplaceapp.security.dto.AccessTokenResponse
 import com.daniel.marketplaceapp.security.util.JwtConstants
 import com.daniel.marketplaceapp.testsupport.annotations.ControllerIntegrationTest
@@ -20,16 +20,11 @@ import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.BeforeAll
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import java.math.BigDecimal
@@ -50,7 +45,7 @@ class ProductControllerTest {
     private lateinit var productSteps: ProductSteps
 
     @Autowired
-    private lateinit var productRepository: SpringDataProductRepository
+    private lateinit var productRepository: ProductRepository
 
     private lateinit var userA: User
     private lateinit var userB: User
@@ -171,7 +166,7 @@ class ProductControllerTest {
         )
             .andExpect(status().isNoContent)
 
-        val deletedProduct = productRepository.findByIdOrNull(requireNotNull(product.id))
+        val deletedProduct = productRepository.findById(requireNotNull(product.id))
             .shouldNotBeNull()
         deletedProduct.status shouldBe ProductStatus.DELETED
     }
@@ -186,7 +181,7 @@ class ProductControllerTest {
         )
             .andExpect(status().isNoContent)
 
-        val hiddenProduct = productRepository.findByIdOrNull(requireNotNull(product.id))
+        val hiddenProduct = productRepository.findById(requireNotNull(product.id))
             .shouldNotBeNull()
         hiddenProduct.status shouldBe ProductStatus.HIDDEN
     }
@@ -202,7 +197,7 @@ class ProductControllerTest {
         )
             .andExpect(status().isNoContent)
 
-        val activeProduct = productRepository.findByIdOrNull(requireNotNull(product.id))
+        val activeProduct = productRepository.findById(requireNotNull(product.id))
             .shouldNotBeNull()
         activeProduct.status shouldBe ProductStatus.ACTIVE
     }

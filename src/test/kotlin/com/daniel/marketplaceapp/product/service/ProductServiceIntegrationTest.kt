@@ -6,7 +6,7 @@ import com.daniel.marketplaceapp.product.enums.ProductStatus
 import com.daniel.marketplaceapp.product.exception.EmptyUpdateProductRequestException
 import com.daniel.marketplaceapp.product.exception.ProductAlreadyDeletedException
 import com.daniel.marketplaceapp.product.exception.ProductNotFoundException
-import com.daniel.marketplaceapp.product.repository.SpringDataProductRepository
+import com.daniel.marketplaceapp.product.repository.ProductRepository
 import com.daniel.marketplaceapp.testsupport.annotations.ServiceIntegrationTest
 import com.daniel.marketplaceapp.testsupport.fixtures.randomString
 import com.daniel.marketplaceapp.testsupport.steps.ProductSteps
@@ -22,7 +22,6 @@ import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.BeforeAll
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.data.repository.findByIdOrNull
 import java.math.BigDecimal
 import kotlin.test.Test
 
@@ -32,7 +31,7 @@ class ProductServiceIntegrationTest {
     private lateinit var productService: ProductService
 
     @Autowired
-    private lateinit var productRepository: SpringDataProductRepository
+    private lateinit var productRepository: ProductRepository
 
     @Autowired
     private lateinit var userSteps: UserSteps
@@ -60,7 +59,7 @@ class ProductServiceIntegrationTest {
         val result = productService.create(req, sellerId)
         result.id.shouldNotBeNull()
 
-        val product = productRepository.findByIdOrNull(requireNotNull(result.id))
+        val product = productRepository.findById(requireNotNull(result.id))
             .shouldNotBeNull()
 
         product.id.shouldNotBeNull()
@@ -69,7 +68,7 @@ class ProductServiceIntegrationTest {
         product.description shouldBe req.description
         product.price.amount shouldBe req.price
         product.status shouldBe ProductStatus.ACTIVE
-        product.seller.id shouldBe sellerId
+        product.sellerId shouldBe sellerId
         product.updatedAt.shouldBeNull()
     }
 
@@ -84,7 +83,7 @@ class ProductServiceIntegrationTest {
         )
         val productId = requireNotNull(productBeforeDelete.id)
         productService.delete(productId, sellerId)
-        val productAfterDelete = productRepository.findByIdOrNull(productId).shouldNotBeNull()
+        val productAfterDelete = productRepository.findById(productId).shouldNotBeNull()
 
         productAfterDelete.updatedAt.shouldNotBeNull()
         productAfterDelete.status shouldBe ProductStatus.DELETED
@@ -163,7 +162,7 @@ class ProductServiceIntegrationTest {
 
         productService.hide(requireNotNull(product.id), sellerId)
 
-        val hiddenProduct = productRepository.findByIdOrNull(requireNotNull(product.id)).shouldNotBeNull()
+        val hiddenProduct = productRepository.findById(requireNotNull(product.id)).shouldNotBeNull()
 
         hiddenProduct.updatedAt.shouldNotBeNull()
         hiddenProduct.title shouldBe product.title
@@ -177,7 +176,7 @@ class ProductServiceIntegrationTest {
         productService.hide(requireNotNull(product.id), sellerId)
         productService.unhide(requireNotNull(product.id), sellerId)
 
-        val unhiddenProduct = productRepository.findByIdOrNull(requireNotNull(product.id)).shouldNotBeNull()
+        val unhiddenProduct = productRepository.findById(requireNotNull(product.id)).shouldNotBeNull()
 
         unhiddenProduct.updatedAt.shouldNotBeNull()
         unhiddenProduct.title shouldBe product.title
@@ -197,7 +196,7 @@ class ProductServiceIntegrationTest {
         )
         productService.update(req, productId, sellerId)
 
-        val productAfterUpdate = productRepository.findByIdOrNull(productId).shouldNotBeNull()
+        val productAfterUpdate = productRepository.findById(productId).shouldNotBeNull()
 
         productAfterUpdate.id shouldBe productId
         productAfterUpdate.title shouldBe req.title
