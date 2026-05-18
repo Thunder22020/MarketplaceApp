@@ -4,6 +4,7 @@ import com.daniel.marketplaceapp.core.domain.Money
 import com.daniel.marketplaceapp.order.enums.OrderStatus
 import com.daniel.marketplaceapp.order.exception.OrderItemNotFoundException
 import com.daniel.marketplaceapp.order.exception.OrderNotFoundException
+import com.daniel.marketplaceapp.order.repository.OrderRepository
 import com.daniel.marketplaceapp.order.repository.SpringDataOrderRepository
 import com.daniel.marketplaceapp.testsupport.steps.ProductSteps
 import com.daniel.marketplaceapp.testsupport.steps.UserSteps
@@ -29,7 +30,7 @@ class OrderServiceIntegrationTest {
     private lateinit var orderService: OrderService
 
     @Autowired
-    private lateinit var orderRepository: SpringDataOrderRepository
+    private lateinit var orderRepository: OrderRepository
 
     @Autowired
     private lateinit var userSteps: UserSteps
@@ -50,7 +51,7 @@ class OrderServiceIntegrationTest {
         val product2 = productSteps.createProduct(sellerId = userId)
         val product3 = productSteps.createProduct(sellerId = userId)
 
-        orderRepository.findDraftByCustomerIdWithItems(userId)
+        orderRepository.findDraftByCustomerId(userId)
             .shouldBeNull()
 
         repeat(2) {
@@ -59,7 +60,7 @@ class OrderServiceIntegrationTest {
         orderService.addItemToCart(product2.id!!, userId)
         orderService.addItemToCart(product3.id!!, userId)
 
-        val order = orderRepository.findDraftByCustomerIdWithItems(userId)
+        val order = orderRepository.findDraftByCustomerId(userId)
             .shouldNotBeNull()
         order.updatedAt.shouldNotBeNull()
         order.status shouldBe OrderStatus.DRAFT
@@ -67,17 +68,17 @@ class OrderServiceIntegrationTest {
         val orderItems = order.items
         orderItems.shouldHaveSize(3)
         orderItems.forAll {
-            it.order?.id shouldBe order.id
+            it.orderId shouldBe order.id
         }
         order.totalAmount.amount shouldBe orderItems.sumOf { it.totalPrice().amount }
 
-        val orderItem1 = orderItems.single { it.product.id == product1.id }
-        val orderItem2 = orderItems.single { it.product.id == product2.id }
-        val orderItem3 = orderItems.single { it.product.id == product3.id }
+        val orderItem1 = orderItems.single { it.productId == product1.id }
+        val orderItem2 = orderItems.single { it.productId == product2.id }
+        val orderItem3 = orderItems.single { it.productId == product3.id }
 
-        orderItem1.product.id shouldBe product1.id
-        orderItem2.product.id shouldBe product2.id
-        orderItem3.product.id shouldBe product3.id
+        orderItem1.productId shouldBe product1.id
+        orderItem2.productId shouldBe product2.id
+        orderItem3.productId shouldBe product3.id
 
         orderItem1.quantity shouldBe 2
         orderItem2.quantity shouldBe 1
@@ -92,13 +93,13 @@ class OrderServiceIntegrationTest {
 
         orderService.deleteItemFromCart(product.id!!, userId)
 
-        val order = orderRepository.findDraftByCustomerIdWithItems(userId)
+        val order = orderRepository.findDraftByCustomerId(userId)
             .shouldNotBeNull()
 
         order.totalAmount shouldBe Money.ZERO
 
         order.items
-            .firstOrNull { it.product.id == product.id }
+            .firstOrNull { it.productId == product.id }
             .shouldBeNull()
     }
 
@@ -112,13 +113,13 @@ class OrderServiceIntegrationTest {
 
         orderService.deleteItemFromCart(product.id!!, userId)
 
-        val order = orderRepository.findDraftByCustomerIdWithItems(userId)
+        val order = orderRepository.findDraftByCustomerId(userId)
             .shouldNotBeNull()
 
         order.totalAmount shouldBe product.price * 2
 
         val item = order.items
-            .firstOrNull { it.product.id == product.id }
+            .firstOrNull { it.productId == product.id }
             .shouldNotBeNull()
 
         item.quantity shouldBe 2
@@ -153,7 +154,7 @@ class OrderServiceIntegrationTest {
         }
         orderService.addItemToCart(product2.id!!, userId)
 
-        val order = orderRepository.findDraftByCustomerIdWithItems(userId)
+        val order = orderRepository.findDraftByCustomerId(userId)
             .shouldNotBeNull()
 
         val orderItems = orderService.getCartItems(userId)

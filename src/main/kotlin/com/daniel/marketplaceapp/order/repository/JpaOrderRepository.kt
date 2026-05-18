@@ -5,11 +5,13 @@ import com.daniel.marketplaceapp.order.mapper.OrderMapper
 import com.daniel.marketplaceapp.product.repository.SpringDataProductRepository
 import com.daniel.marketplaceapp.user.exception.UserNotFoundException
 import com.daniel.marketplaceapp.user.repository.UserRepository
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Repository
 import java.util.UUID
 
 @Repository
+@ConditionalOnProperty(name = ["app.service-type.db"], havingValue = "jpa")
 class JpaOrderRepository(
     private val springDataOrderRepository: SpringDataOrderRepository,
     private val userRepository: UserRepository,

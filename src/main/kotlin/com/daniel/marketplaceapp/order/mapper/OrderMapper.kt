@@ -7,6 +7,7 @@ import com.daniel.marketplaceapp.order.entity.OrderEntity
 import com.daniel.marketplaceapp.order.entity.OrderItemEntity
 import com.daniel.marketplaceapp.product.entity.ProductEntity
 import com.daniel.marketplaceapp.user.entity.User
+import org.jooq.Record
 import java.util.UUID
 
 object OrderMapper {

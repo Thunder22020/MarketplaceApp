@@ -9,14 +9,14 @@ import java.util.UUID
 
 
 class Order(
-    val id: UUID?,
+    var id: UUID?,
     val status: OrderStatus,
     var totalAmount: Money,
     val customerId: UUID,
     val createdAt: Instant,
     var updatedAt: Instant?,
     val items: MutableList<OrderItem>,
-    val version: Long? = null,
+    var version: Long? = null,
 ) {
     fun addItemToCart(product: Product) {
         val existingItem = this.items.firstOrNull { it.productId == product.id }
