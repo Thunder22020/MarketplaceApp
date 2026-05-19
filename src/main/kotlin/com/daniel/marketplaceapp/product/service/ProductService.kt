@@ -8,10 +8,10 @@ import com.daniel.marketplaceapp.product.enums.ProductStatus
 import com.daniel.marketplaceapp.product.exception.EmptyUpdateProductRequestException
 import com.daniel.marketplaceapp.product.exception.ProductNotFoundException
 import com.daniel.marketplaceapp.product.repository.ProductRepository
-import org.springframework.stereotype.Service
-import org.springframework.transaction.annotation.Transactional
 import java.time.Instant
 import java.util.UUID
+import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 
 @Service
 class ProductService(

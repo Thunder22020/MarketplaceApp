@@ -5,9 +5,9 @@ import com.daniel.marketplaceapp.user.entity.User
 import com.daniel.marketplaceapp.user.exception.UserAlreadyExistsException
 import com.daniel.marketplaceapp.user.exception.UserNotFoundException
 import com.daniel.marketplaceapp.user.repository.UserRepository
+import java.util.UUID
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
-import java.util.*
 
 @Service
 class UserService(

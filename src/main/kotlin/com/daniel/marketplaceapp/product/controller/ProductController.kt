@@ -7,7 +7,7 @@ import com.daniel.marketplaceapp.product.dto.UpdateProductRequest
 import com.daniel.marketplaceapp.product.mapper.toResponse
 import com.daniel.marketplaceapp.product.service.ProductService
 import jakarta.validation.Valid
-import java.util.*
+import java.util.UUID
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.DeleteMapping

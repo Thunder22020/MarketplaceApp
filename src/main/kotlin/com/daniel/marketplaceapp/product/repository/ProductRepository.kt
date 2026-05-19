@@ -2,7 +2,7 @@ package com.daniel.marketplaceapp.product.repository
 
 import com.daniel.marketplaceapp.product.domain.Product
 import com.daniel.marketplaceapp.product.enums.ProductStatus
-import java.util.*
+import java.util.UUID
 
 interface ProductRepository {
     fun save(product: Product): Product

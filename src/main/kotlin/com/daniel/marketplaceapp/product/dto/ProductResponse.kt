@@ -3,7 +3,7 @@ package com.daniel.marketplaceapp.product.dto
 import com.daniel.marketplaceapp.product.enums.ProductStatus
 import java.math.BigDecimal
 import java.time.Instant
-import java.util.*
+import java.util.UUID
 
 data class ProductResponse(
     var id: UUID,

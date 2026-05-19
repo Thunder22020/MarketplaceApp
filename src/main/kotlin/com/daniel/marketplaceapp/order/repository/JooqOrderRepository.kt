@@ -9,11 +9,11 @@ import com.daniel.marketplaceapp.order.domain.Order
 import com.daniel.marketplaceapp.order.domain.OrderItem
 import com.daniel.marketplaceapp.order.enums.OrderStatus
 import jakarta.persistence.OptimisticLockException
+import java.util.UUID
 import org.jooq.DSLContext
 import org.jooq.Record
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Repository
-import java.util.*
 
 @Repository
 @ConditionalOnProperty(name = ["app.service-type.db"], havingValue = "jooq")

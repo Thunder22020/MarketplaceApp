@@ -6,11 +6,11 @@ import com.daniel.marketplaceapp.core.mapper.toLocalDateTime
 import com.daniel.marketplaceapp.jooq.Tables.PRODUCTS
 import com.daniel.marketplaceapp.product.domain.Product
 import com.daniel.marketplaceapp.product.enums.ProductStatus
+import java.util.UUID
 import org.jooq.DSLContext
 import org.jooq.Record
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Repository
-import java.util.*
 
 @Repository
 @ConditionalOnProperty(name = ["app.service-type.db"], havingValue = "jooq")
