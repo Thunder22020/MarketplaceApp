@@ -2,16 +2,11 @@ package com.daniel.marketplaceapp.order.controller
 
 import com.daniel.marketplaceapp.core.annotations.CurrentUserId
 import com.daniel.marketplaceapp.order.dto.OrderItemResponse
-import com.daniel.marketplaceapp.order.mapper.OrderMapper
+import com.daniel.marketplaceapp.order.mapper.toResponse
 import com.daniel.marketplaceapp.order.service.OrderService
 import org.springframework.http.ResponseEntity
-import org.springframework.web.bind.annotation.DeleteMapping
-import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.PathVariable
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RestController
-import java.util.UUID
+import org.springframework.web.bind.annotation.*
+import java.util.*
 
 @RestController
 @RequestMapping("/orders")
@@ -20,7 +15,7 @@ class OrderController(
 ) {
     @GetMapping
     fun getCartItems(@CurrentUserId customerId: UUID): List<OrderItemResponse> {
-        return orderService.getCartItems(customerId).map { OrderMapper.toResponse(it) }
+        return orderService.getCartItems(customerId).map { it.toResponse() }
     }
 
     @PostMapping("/{productId}")

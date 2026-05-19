@@ -5,7 +5,6 @@ import com.daniel.marketplaceapp.order.enums.OrderStatus
 import com.daniel.marketplaceapp.order.exception.OrderItemNotFoundException
 import com.daniel.marketplaceapp.order.exception.OrderNotFoundException
 import com.daniel.marketplaceapp.order.repository.OrderRepository
-import com.daniel.marketplaceapp.order.repository.SpringDataOrderRepository
 import com.daniel.marketplaceapp.testsupport.steps.ProductSteps
 import com.daniel.marketplaceapp.testsupport.steps.UserSteps
 import io.kotest.assertions.throwables.shouldThrow
@@ -19,7 +18,7 @@ import org.junit.jupiter.api.TestInstance
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.transaction.annotation.Transactional
-import java.util.UUID
+import java.util.*
 import kotlin.test.Test
 
 @Transactional
