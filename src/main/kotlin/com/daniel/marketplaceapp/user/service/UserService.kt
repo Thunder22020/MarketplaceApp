@@ -1,7 +1,7 @@
 package com.daniel.marketplaceapp.user.service
 
+import com.daniel.marketplaceapp.user.domain.User
 import com.daniel.marketplaceapp.user.dto.request.RegisterRequest
-import com.daniel.marketplaceapp.user.entity.User
 import com.daniel.marketplaceapp.user.exception.UserAlreadyExistsException
 import com.daniel.marketplaceapp.user.exception.UserNotFoundException
 import com.daniel.marketplaceapp.user.repository.UserRepository
@@ -19,16 +19,16 @@ class UserService(
             throw UserAlreadyExistsException("User already exists")
         }
 
-        val entity = User(
+        val user = User(
+            id = null,
             username = dto.username,
             passwordHash = requireNotNull(encoder.encode(dto.password))
         )
 
-        return userRepository.save(entity)
+        return userRepository.save(user)
     }
 
     fun getByIdOrThrow(id: UUID): User =
-        userRepository.findById(id).orElseThrow {
-            UserNotFoundException("User with ID:$id not found")
-        }
+        userRepository.findById(id)
+            ?: throw UserNotFoundException("User with ID:$id not found")
 }

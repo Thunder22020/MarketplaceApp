@@ -11,7 +11,7 @@ import com.daniel.marketplaceapp.testsupport.annotations.ServiceIntegrationTest
 import com.daniel.marketplaceapp.testsupport.fixtures.randomString
 import com.daniel.marketplaceapp.testsupport.steps.ProductSteps
 import com.daniel.marketplaceapp.testsupport.steps.UserSteps
-import com.daniel.marketplaceapp.user.entity.User
+import com.daniel.marketplaceapp.user.domain.User
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.inspectors.forAll
 import io.kotest.matchers.collections.shouldContain
@@ -20,9 +20,9 @@ import io.kotest.matchers.collections.shouldNotContainAll
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
+import java.math.BigDecimal
 import org.junit.jupiter.api.BeforeAll
 import org.springframework.beans.factory.annotation.Autowired
-import java.math.BigDecimal
 import kotlin.test.Test
 
 @ServiceIntegrationTest

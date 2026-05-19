@@ -1,8 +1,8 @@
 package com.daniel.marketplaceapp.user.mapper
 
+import com.daniel.marketplaceapp.user.domain.User
 import com.daniel.marketplaceapp.user.dto.response.SearchResponse
 import com.daniel.marketplaceapp.user.dto.response.UserResponse
-import com.daniel.marketplaceapp.user.entity.User
 
 fun User.toSearchResponse() = SearchResponse(username)
 

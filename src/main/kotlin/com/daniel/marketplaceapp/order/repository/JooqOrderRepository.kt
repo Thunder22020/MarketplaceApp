@@ -8,11 +8,11 @@ import com.daniel.marketplaceapp.jooq.Tables.ORDER_ITEMS
 import com.daniel.marketplaceapp.order.domain.Order
 import com.daniel.marketplaceapp.order.domain.OrderItem
 import com.daniel.marketplaceapp.order.enums.OrderStatus
-import jakarta.persistence.OptimisticLockException
 import java.util.UUID
 import org.jooq.DSLContext
 import org.jooq.Record
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
+import org.springframework.dao.OptimisticLockingFailureException
 import org.springframework.stereotype.Repository
 
 @Repository
@@ -54,7 +54,7 @@ class JooqOrderRepository(
             .and(ORDERS.VERSION.eq(order.version))
             .execute()
         if (updateRows == 0) {
-            throw OptimisticLockException("Row was updated or deleted by another transaction")
+            throw OptimisticLockingFailureException("Row was updated or deleted by another transaction")
         }
         val fetchedItems = findAllItemsByOrderId(requireNotNull(order.id))
 

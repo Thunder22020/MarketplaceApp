@@ -1,11 +1,10 @@
 package com.daniel.marketplaceapp.user.repository
 
-import com.daniel.marketplaceapp.user.entity.User
+import com.daniel.marketplaceapp.user.domain.User
 import java.util.UUID
-import org.springframework.data.jpa.repository.JpaRepository
-import org.springframework.stereotype.Repository
 
-@Repository
-interface UserRepository : JpaRepository<User, UUID> {
+interface UserRepository {
+    fun save(user: User): User
+    fun findById(id: UUID): User?
     fun findByUsername(username: String): User?
 }

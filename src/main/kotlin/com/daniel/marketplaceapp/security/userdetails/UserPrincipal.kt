@@ -1,6 +1,6 @@
 package com.daniel.marketplaceapp.security.userdetails
 
-import com.daniel.marketplaceapp.user.entity.User
+import com.daniel.marketplaceapp.user.domain.User
 import java.util.Collections
 import org.springframework.security.core.GrantedAuthority
 import org.springframework.security.core.authority.SimpleGrantedAuthority
