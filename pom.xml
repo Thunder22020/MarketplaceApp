@@ -29,6 +29,7 @@
     <properties>
         <java.version>21</java.version>
         <kotlin.version>2.2.21</kotlin.version>
+        <jooq.version>3.19.32</jooq.version>
     </properties>
     <dependencies>
         <dependency>
@@ -174,6 +175,74 @@
                         <version>${kotlin.version}</version>
                     </dependency>
                 </dependencies>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>build-helper-maven-plugin</artifactId>
+                <version>3.6.0</version>
+                <executions>
+                    <execution>
+                        <id>add-jooq-sources</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>add-source</goal>
+                        </goals>
+                        <configuration>
+                            <sources>
+                                <source>${project.build.directory}/generated-sources/jooq</source>
+                            </sources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.jooq</groupId>
+                <artifactId>jooq-codegen-maven</artifactId>
+                <version>${jooq.version}</version>
+                <executions>
+                    <execution>
+                        <id>generate-jooq</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>generate</goal>
+                        </goals>
+                    </execution>
+                </executions>
+
+                <dependencies>
+                    <dependency>
+                        <groupId>org.jooq</groupId>
+                        <artifactId>jooq-meta-extensions-liquibase</artifactId>
+                        <version>${jooq.version}</version>
+                    </dependency>
+                </dependencies>
+
+                <configuration>
+                    <generator>
+                        <database>
+                            <name>org.jooq.meta.extensions.liquibase.LiquibaseDatabase</name>
+                            <properties>
+                                <property>
+                                    <key>rootPath</key>
+                                    <value>${basedir}/src/main/resources</value>
+                                </property>
+                                <property>
+                                    <key>scripts</key>
+                                    <value>db/changelog/db.changelog-master.yaml</value>
+                                </property>
+                                <property>
+                                    <key>includeLiquibaseTables</key>
+                                    <value>false</value>
+                                </property>
+                            </properties>
+                        </database>
+
+                        <target>
+                            <packageName>com.daniel.marketplaceapp.jooq</packageName>
+                            <directory>${project.build.directory}/generated-sources/jooq</directory>
+                        </target>
+                    </generator>
+                </configuration>
             </plugin>
         </plugins>
     </build>

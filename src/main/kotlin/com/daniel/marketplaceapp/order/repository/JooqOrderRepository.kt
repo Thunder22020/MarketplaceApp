@@ -1,19 +1,19 @@
 package com.daniel.marketplaceapp.order.repository
 
 import com.daniel.marketplaceapp.core.domain.Money
+import com.daniel.marketplaceapp.core.mapper.toInstantUtc
+import com.daniel.marketplaceapp.core.mapper.toLocalDateTime
+import com.daniel.marketplaceapp.jooq.Tables.ORDERS
+import com.daniel.marketplaceapp.jooq.Tables.ORDER_ITEMS
 import com.daniel.marketplaceapp.order.domain.Order
 import com.daniel.marketplaceapp.order.domain.OrderItem
 import com.daniel.marketplaceapp.order.enums.OrderStatus
 import jakarta.persistence.OptimisticLockException
 import org.jooq.DSLContext
 import org.jooq.Record
-import org.jooq.impl.DSL
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Repository
-import java.math.BigDecimal
-import java.sql.Timestamp
-import java.util.UUID
-import kotlin.collections.contains
+import java.util.*
 
 @Repository
 @ConditionalOnProperty(name = ["app.service-type.db"], havingValue = "jooq")
@@ -30,13 +30,13 @@ class JooqOrderRepository(
     private fun insert(order: Order): Order {
         val orderId = UUID.randomUUID()
         dsl.insertInto(ORDERS)
-            .set(ORDER_ID, orderId)
-            .set(ORDER_STATUS, order.status.name)
-            .set(ORDER_TOTAL_AMOUNT, order.totalAmount.amount)
-            .set(ORDER_CUSTOMER_ID, order.customerId)
-            .set(ORDER_CREATED_AT, Timestamp.from(order.createdAt))
-            .set(ORDER_UPDATED_AT, order.updatedAt?.let { Timestamp.from(it) })
-            .set(ORDER_VERSION, 0L)
+            .set(ORDERS.ID, orderId)
+            .set(ORDERS.STATUS, order.status.name)
+            .set(ORDERS.TOTAL_AMOUNT, order.totalAmount.amount)
+            .set(ORDERS.CUSTOMER_ID, order.customerId)
+            .set(ORDERS.CREATED_AT, order.createdAt.toLocalDateTime())
+            .set(ORDERS.UPDATED_AT, order.updatedAt?.toLocalDateTime())
+            .set(ORDERS.VERSION, 0L)
             .execute()
         order.id = orderId
         order.version = 0L
@@ -46,12 +46,12 @@ class JooqOrderRepository(
 
     private fun update(order: Order): Order {
         val updateRows = dsl.update(ORDERS)
-            .set(ORDER_STATUS, order.status.name)
-            .set(ORDER_TOTAL_AMOUNT, order.totalAmount.amount)
-            .set(ORDER_UPDATED_AT, order.updatedAt?.let { Timestamp.from(it) })
-            .set(ORDER_VERSION, order.version?.inc())
-            .where(ORDER_ID.eq(order.id))
-            .and(ORDER_VERSION.eq(order.version))
+            .set(ORDERS.STATUS, order.status.name)
+            .set(ORDERS.TOTAL_AMOUNT, order.totalAmount.amount)
+            .set(ORDERS.UPDATED_AT, order.updatedAt?.toLocalDateTime())
+            .set(ORDERS.VERSION, order.version?.inc())
+            .where(ORDERS.ID.eq(order.id))
+            .and(ORDERS.VERSION.eq(order.version))
             .execute()
         if (updateRows == 0) {
             throw OptimisticLockException("Row was updated or deleted by another transaction")
@@ -73,7 +73,7 @@ class JooqOrderRepository(
 
     private fun findAllItemsByOrderId(orderId: UUID) =
         dsl.selectFrom(ORDER_ITEMS)
-            .where(ITEM_ORDER_ID.eq(orderId))
+            .where(ORDER_ITEMS.ORDER_ID.eq(orderId))
             .forUpdate()
             .fetch()
             .map { toOrderItemDomain(it) }
@@ -84,11 +84,11 @@ class JooqOrderRepository(
             item.id = itemId
             item.orderId = orderId
             dsl.insertInto(ORDER_ITEMS)
-                .set(ITEM_ID, itemId)
-                .set(ITEM_ORDER_ID, orderId)
-                .set(ITEM_PRODUCT_ID, item.productId)
-                .set(ITEM_QUANTITY, item.quantity)
-                .set(ITEM_UNIT_PRICE, item.unitPrice.amount)
+                .set(ORDER_ITEMS.ID, itemId)
+                .set(ORDER_ITEMS.ORDER_ID, orderId)
+                .set(ORDER_ITEMS.PRODUCT_ID, item.productId)
+                .set(ORDER_ITEMS.QUANTITY, item.quantity)
+                .set(ORDER_ITEMS.UNIT_PRICE, item.unitPrice.amount)
         }
         dsl.batch(queries).execute()
     }
@@ -96,16 +96,16 @@ class JooqOrderRepository(
     private fun deleteItems(items: List<OrderItem>) {
         val ids = items.map { it.id }
         dsl.deleteFrom(ORDER_ITEMS)
-            .where(ITEM_ID.`in`(ids))
+            .where(ORDER_ITEMS.ID.`in`(ids))
             .execute()
     }
 
     private fun updateItems(items: List<OrderItem>) {
         val queries = items.map { item ->
             dsl.update(ORDER_ITEMS)
-                .set(ITEM_QUANTITY, item.quantity)
-                .set(ITEM_UNIT_PRICE, item.unitPrice.amount)
-                .where(ITEM_ID.eq(item.id))
+                .set(ORDER_ITEMS.QUANTITY, item.quantity)
+                .set(ORDER_ITEMS.UNIT_PRICE, item.unitPrice.amount)
+                .where(ORDER_ITEMS.ID.eq(item.id))
         }
         dsl.batch(queries).execute()
     }
@@ -113,9 +113,9 @@ class JooqOrderRepository(
     override fun findDraftByCustomerId(customerId: UUID): Order? {
         val records = dsl.select()
             .from(ORDERS)
-            .leftJoin(ORDER_ITEMS).on(ORDER_ID.eq(ITEM_ORDER_ID))
-            .where(ORDER_CUSTOMER_ID.eq(customerId))
-            .and(ORDER_STATUS.eq(OrderStatus.DRAFT.name))
+            .leftJoin(ORDER_ITEMS).on(ORDERS.ID.eq(ORDER_ITEMS.ORDER_ID))
+            .where(ORDERS.CUSTOMER_ID.eq(customerId))
+            .and(ORDERS.STATUS.eq(OrderStatus.DRAFT.name))
             .fetch()
             .ifEmpty { return null }
 
@@ -129,22 +129,22 @@ class JooqOrderRepository(
     }
 
     private fun toOrderDomain(record: Record) = Order(
-        id = requireNotNull(record.get(ORDER_ID)),
-        status = OrderStatus.valueOf(requireNotNull(record.get(ORDER_STATUS))),
-        totalAmount = Money(requireNotNull(record.get(ORDER_TOTAL_AMOUNT))),
-        customerId = requireNotNull(record.get(ORDER_CUSTOMER_ID)),
-        createdAt = requireNotNull(record.get(ORDER_CREATED_AT)).toInstant(),
-        updatedAt = record.get(ORDER_UPDATED_AT)?.toInstant(),
+        id = requireNotNull(record.get(ORDERS.ID)),
+        status = OrderStatus.valueOf(requireNotNull(record.get(ORDERS.STATUS))),
+        totalAmount = Money(requireNotNull(record.get(ORDERS.TOTAL_AMOUNT))),
+        customerId = requireNotNull(record.get(ORDERS.CUSTOMER_ID)),
+        createdAt = requireNotNull(record.get(ORDERS.CREATED_AT)).toInstantUtc(),
+        updatedAt = record.get(ORDERS.UPDATED_AT)?.toInstantUtc(),
         items = mutableListOf(),
-        version = record.get(ORDER_VERSION)
+        version = record.get(ORDERS.VERSION)
     )
 
     private fun toOrderItemDomain(record: Record) = OrderItem(
-        id = requireNotNull(record.get(ITEM_ID)),
-        orderId = requireNotNull(record.get(ITEM_ORDER_ID)),
-        productId = requireNotNull(record.get(ITEM_PRODUCT_ID)),
-        unitPrice = Money(requireNotNull(record.get(ITEM_UNIT_PRICE))),
-        quantity = requireNotNull(record.get(ITEM_QUANTITY)),
+        id = requireNotNull(record.get(ORDER_ITEMS.ID)),
+        orderId = requireNotNull(record.get(ORDER_ITEMS.ORDER_ID)),
+        productId = requireNotNull(record.get(ORDER_ITEMS.PRODUCT_ID)),
+        unitPrice = Money(requireNotNull(record.get(ORDER_ITEMS.UNIT_PRICE))),
+        quantity = requireNotNull(record.get(ORDER_ITEMS.QUANTITY)),
     )
 
     private fun handleDiff(
@@ -168,30 +168,12 @@ class JooqOrderRepository(
     }
 
     private fun isCartEmpty(records: List<Record>) =
-        records.size == 1 && records.first().get(ITEM_ID) == null
+        records.size == 1 && records.first().get(ORDER_ITEMS.ID) == null
 
     private fun OrderItem.hasSamePersistentStateAs(other: OrderItem) =
         productId == other.productId &&
                 unitPrice == other.unitPrice &&
                 quantity == other.quantity
-
-    companion object {
-        private val ORDERS = DSL.table(DSL.name("orders"))
-        private val ORDER_ID = DSL.field(DSL.name("orders","id"), UUID::class.java)
-        private val ORDER_STATUS = DSL.field(DSL.name("status"), String::class.java)
-        private val ORDER_TOTAL_AMOUNT = DSL.field(DSL.name("total_amount"), BigDecimal::class.java)
-        private val ORDER_CUSTOMER_ID = DSL.field(DSL.name("customer_id"), UUID::class.java)
-        private val ORDER_CREATED_AT = DSL.field(DSL.name("created_at"), Timestamp::class.java)
-        private val ORDER_UPDATED_AT = DSL.field(DSL.name("updated_at"), Timestamp::class.java)
-        private val ORDER_VERSION = DSL.field(DSL.name("version"), Long::class.java)
-
-        private val ORDER_ITEMS = DSL.table(DSL.name("order_items"))
-        private val ITEM_ID = DSL.field(DSL.name("order_items", "id"), UUID::class.java)
-        private val ITEM_ORDER_ID = DSL.field(DSL.name("order_id"), UUID::class.java)
-        private val ITEM_PRODUCT_ID = DSL.field(DSL.name("product_id"), UUID::class.java)
-        private val ITEM_UNIT_PRICE = DSL.field(DSL.name("unit_price"), BigDecimal::class.java)
-        private val ITEM_QUANTITY = DSL.field(DSL.name("quantity"), Int::class.java)
-    }
 }
 
 data class UpdateDiff(
