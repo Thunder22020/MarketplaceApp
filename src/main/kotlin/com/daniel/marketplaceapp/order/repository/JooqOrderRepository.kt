@@ -11,12 +11,10 @@ import com.daniel.marketplaceapp.order.enums.OrderStatus
 import java.util.UUID
 import org.jooq.DSLContext
 import org.jooq.Record
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.dao.OptimisticLockingFailureException
 import org.springframework.stereotype.Repository
 
 @Repository
-@ConditionalOnProperty(name = ["app.service-type.db"], havingValue = "jooq")
 class JooqOrderRepository(
     private val dsl: DSLContext,
 ) : OrderRepository {

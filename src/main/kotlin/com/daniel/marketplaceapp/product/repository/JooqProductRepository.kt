@@ -13,7 +13,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Repository
 
 @Repository
-@ConditionalOnProperty(name = ["app.service-type.db"], havingValue = "jooq")
 class JooqProductRepository(
     private val dsl: DSLContext,
 ) : ProductRepository {

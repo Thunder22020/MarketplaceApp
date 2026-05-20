@@ -18,5 +18,3 @@ app:
   jwt:
     secret-key: test-secret-key-test-secret-key-test-secret-key
     access-expiration: 3600000
-  service-type:
-    db: "jooq"
