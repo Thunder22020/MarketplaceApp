@@ -80,11 +80,8 @@ class JooqOrderRepository(
 
     private fun insertItems(items: List<OrderItem>, orderId: UUID) {
         val queries = items.map { item ->
-            val itemId = UUID.randomUUID()
-            item.id = itemId
             item.orderId = orderId
             dsl.insertInto(ORDER_ITEMS)
-                .set(ORDER_ITEMS.ID, itemId)
                 .set(ORDER_ITEMS.ORDER_ID, orderId)
                 .set(ORDER_ITEMS.PRODUCT_ID, item.productId)
                 .set(ORDER_ITEMS.QUANTITY, item.quantity)
@@ -94,10 +91,14 @@ class JooqOrderRepository(
     }
 
     private fun deleteItems(items: List<OrderItem>) {
-        val ids = items.map { it.id }
-        dsl.deleteFrom(ORDER_ITEMS)
-            .where(ORDER_ITEMS.ID.`in`(ids))
-            .execute()
+        val queries = items.map { item ->
+            dsl.deleteFrom(ORDER_ITEMS)
+                .where(
+                    ORDER_ITEMS.ORDER_ID.eq(item.orderId)
+                        .and(ORDER_ITEMS.PRODUCT_ID.eq(item.productId))
+                )
+        }
+        dsl.batch(queries).execute()
     }
 
     private fun updateItems(items: List<OrderItem>) {
@@ -105,7 +106,10 @@ class JooqOrderRepository(
             dsl.update(ORDER_ITEMS)
                 .set(ORDER_ITEMS.QUANTITY, item.quantity)
                 .set(ORDER_ITEMS.UNIT_PRICE, item.unitPrice.amount)
-                .where(ORDER_ITEMS.ID.eq(item.id))
+                .where(
+                    ORDER_ITEMS.ORDER_ID.eq(item.orderId)
+                        .and(ORDER_ITEMS.PRODUCT_ID.eq(item.productId))
+                )
         }
         dsl.batch(queries).execute()
     }
@@ -140,7 +144,6 @@ class JooqOrderRepository(
     )
 
     private fun toOrderItemDomain(record: Record) = OrderItem(
-        id = requireNotNull(record.get(ORDER_ITEMS.ID)),
         orderId = requireNotNull(record.get(ORDER_ITEMS.ORDER_ID)),
         productId = requireNotNull(record.get(ORDER_ITEMS.PRODUCT_ID)),
         unitPrice = Money(requireNotNull(record.get(ORDER_ITEMS.UNIT_PRICE))),
@@ -151,13 +154,13 @@ class JooqOrderRepository(
         fetchedItems: MutableList<OrderItem>,
         newItems: MutableList<OrderItem>
     ): UpdateDiff {
-        val fetchedItemsByIds = fetchedItems.associateBy { it.id }
-        val newItemsIdSet = newItems.mapNotNull { it.id }.toSet()
+        val fetchedItemsByProductIds = fetchedItems.associateBy { it.productId }
+        val newItemsProductIdSet = newItems.map { it.productId }.toSet()
 
-        val forInsert = newItems.filter { it.id == null || it.id !in fetchedItemsByIds.keys }
-        val forDelete = fetchedItems.filter { i -> i.id !in newItemsIdSet }
+        val forInsert = newItems.filter { it.productId !in fetchedItemsByProductIds.keys }
+        val forDelete = fetchedItems.filter { it.productId !in newItemsProductIdSet }
         val forUpdate = newItems.filter { item ->
-            val oldItem = fetchedItemsByIds[item.id]
+            val oldItem = fetchedItemsByProductIds[item.productId]
             oldItem != null && !item.hasSamePersistentStateAs(oldItem)
         }
         return UpdateDiff(
@@ -168,7 +171,7 @@ class JooqOrderRepository(
     }
 
     private fun isCartEmpty(records: List<Record>) =
-        records.size == 1 && records.first().get(ORDER_ITEMS.ID) == null
+        records.size == 1 && records.first().get(ORDER_ITEMS.PRODUCT_ID) == null
 
     private fun OrderItem.hasSamePersistentStateAs(other: OrderItem) =
         productId == other.productId &&
