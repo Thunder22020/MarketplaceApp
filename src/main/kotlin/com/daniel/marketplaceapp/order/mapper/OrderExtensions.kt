@@ -6,7 +6,6 @@ import com.daniel.marketplaceapp.order.dto.OrderItemResponse
 import com.daniel.marketplaceapp.order.dto.OrderResponse
 
 fun OrderItem.toResponse() = OrderItemResponse(
-    id = requireNotNull(id),
     orderId = requireNotNull(orderId),
     productId = requireNotNull(productId),
     unitPrice = unitPrice.amount,

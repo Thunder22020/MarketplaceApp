@@ -4,7 +4,6 @@ import com.daniel.marketplaceapp.core.domain.Money
 import java.util.UUID
 
 class OrderItem(
-    var id: UUID?,
     var orderId: UUID?,
     var productId: UUID,
     var unitPrice: Money,
