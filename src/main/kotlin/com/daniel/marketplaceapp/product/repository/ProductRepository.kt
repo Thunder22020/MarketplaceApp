@@ -9,9 +9,9 @@ interface ProductRepository {
 
     fun findById(id: UUID): Product?
 
-    fun findByIdAndSellerId(id: UUID, sellerId: UUID): Product?
+    fun findAllByIds(ids: Collection<UUID>): List<Product>
 
-    fun findByIdAndStatus(id: UUID, status: ProductStatus): Product?
+    fun findByIdAndSellerId(id: UUID, sellerId: UUID): Product?
 
     fun findAllByStatus(status: ProductStatus): List<Product>
 

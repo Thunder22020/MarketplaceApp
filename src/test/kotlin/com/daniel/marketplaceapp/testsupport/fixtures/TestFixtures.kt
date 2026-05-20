@@ -1,6 +1,6 @@
 package com.daniel.marketplaceapp.testsupport.fixtures
 
-import java.util.*
+import java.util.UUID
 
 fun randomString(): String = UUID.randomUUID().toString().take(8)
 

@@ -48,9 +48,9 @@ class ProductService(
         updateStatus(productId, currentUserId, ProductStatus.ACTIVE)
     }
 
-    fun getAll() : List<Product> {
-        return productRepository.findAllByStatus(ProductStatus.ACTIVE)
-    }
+    fun getAll() = productRepository.findAllByStatus(ProductStatus.ACTIVE)
+
+    fun getAllByIds(ids: Collection<UUID>) = productRepository.findAllByIds(ids)
 
     fun getAllBySellerId(sellerId: UUID, currentUserId: UUID): List<Product> {
         val visibleStatuses = getVisibleStatuses(sellerId, currentUserId)
@@ -58,7 +58,7 @@ class ProductService(
     }
 
     fun getByIdOrThrow(id: UUID) =
-        productRepository.findByIdAndStatus(id, ProductStatus.ACTIVE)
+        productRepository.findById(id)
             ?: throw ProductNotFoundException("Product with id $id not found")
 
     private fun getByIdAndSellerIdOrThrow(id: UUID, sellerId: UUID) =

@@ -58,21 +58,18 @@ class JooqProductRepository(
             .fetchOne()
             ?.toDomain()
 
+    override fun findAllByIds(ids: Collection<UUID>) =
+        dsl.selectFrom(PRODUCTS)
+            .where(PRODUCTS.ID.`in`(ids))
+            .fetch()
+            .map { it.toDomain() }
+
     override fun findByIdAndSellerId(
         id: UUID,
         sellerId: UUID
     ) = dsl.selectFrom(PRODUCTS)
         .where(PRODUCTS.ID.eq(id))
         .and(PRODUCTS.SELLER_ID.eq(sellerId))
-        .fetchOne()
-        ?.toDomain()
-
-    override fun findByIdAndStatus(
-        id: UUID,
-        status: ProductStatus
-    ) = dsl.selectFrom(PRODUCTS)
-        .where(PRODUCTS.ID.eq(id))
-        .and(PRODUCTS.STATUS.eq(status.name))
         .fetchOne()
         ?.toDomain()
 
