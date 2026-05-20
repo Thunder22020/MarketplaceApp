@@ -110,7 +110,7 @@ class ProductControllerTest {
 
     @Test
     fun `should update product`() {
-        val product = productSteps.createProduct(sellerId = requireNotNull(userA.id))
+        val product = productSteps.create(sellerId = requireNotNull(userA.id))
         val req = UpdateProductRequest(
             title = randomString(),
             description = randomString(),
@@ -133,7 +133,7 @@ class ProductControllerTest {
 
     @Test
     fun `should return bad request when update request is empty`() {
-        val product = productSteps.createProduct(sellerId = requireNotNull(userA.id))
+        val product = productSteps.create(sellerId = requireNotNull(userA.id))
 
         mockMvc.perform(
             put("$PRODUCTS_URL/${product.id}")
@@ -147,7 +147,7 @@ class ProductControllerTest {
 
     @Test
     fun `should return not found when update product by non seller`() {
-        val product = productSteps.createProduct(sellerId = requireNotNull(userA.id))
+        val product = productSteps.create(sellerId = requireNotNull(userA.id))
         val req = UpdateProductRequest(title = randomString())
 
         mockMvc.perform(
@@ -162,7 +162,7 @@ class ProductControllerTest {
 
     @Test
     fun `should soft delete product`() {
-        val product = productSteps.createProduct(sellerId = requireNotNull(userA.id))
+        val product = productSteps.create(sellerId = requireNotNull(userA.id))
 
         mockMvc.perform(
             delete("$PRODUCTS_URL/${product.id}")
@@ -177,7 +177,7 @@ class ProductControllerTest {
 
     @Test
     fun `should hide product`() {
-        val product = productSteps.createProduct(sellerId = requireNotNull(userA.id))
+        val product = productSteps.create(sellerId = requireNotNull(userA.id))
 
         mockMvc.perform(
             patch("$PRODUCTS_URL/${product.id}/hide")
@@ -192,8 +192,8 @@ class ProductControllerTest {
 
     @Test
     fun `should unhide product`() {
-        val product = productSteps.createProduct(sellerId = requireNotNull(userA.id))
-        productSteps.hideProduct(requireNotNull(product.id), requireNotNull(userA.id))
+        val product = productSteps.create(sellerId = requireNotNull(userA.id))
+        productSteps.hide(requireNotNull(product.id), requireNotNull(userA.id))
 
         mockMvc.perform(
             patch("$PRODUCTS_URL/${product.id}/unhide")

@@ -5,6 +5,7 @@ import com.daniel.marketplaceapp.order.domain.Order
 import com.daniel.marketplaceapp.order.domain.OrderItem
 import com.daniel.marketplaceapp.order.enums.OrderStatus
 import com.daniel.marketplaceapp.order.exception.OrderNotFoundException
+import com.daniel.marketplaceapp.order.exception.SomeProductsHaveChangedException
 import com.daniel.marketplaceapp.order.repository.OrderRepository
 import com.daniel.marketplaceapp.product.service.ProductService
 import java.time.Instant
@@ -17,6 +18,21 @@ class OrderService(
     private val orderRepository: OrderRepository,
     private val productService: ProductService,
 ) {
+    @Transactional(noRollbackFor = [SomeProductsHaveChangedException::class])
+    fun checkout(customerId: UUID): Order {
+        val order = getDraftOrderOrThrow(customerId)
+        order.checkItemsNotEmptyOrThrow()
+        val orderItemsByProductIds = order.items.associateBy { it.productId }
+        val productsByIds = productService.getAllByIds(orderItemsByProductIds.keys).associateBy { it.id!! }
+        val hasChanges = order.refreshItemsBeforeCheckout(orderItemsByProductIds, productsByIds)
+        if (hasChanges) {
+            orderRepository.save(order)
+            throw SomeProductsHaveChangedException("Order ${order.id} has been changed")
+        }
+        order.updateStatus(OrderStatus.PENDING_PAYMENT)
+        return orderRepository.save(order)
+    }
+
     @Transactional
     fun addItemToCart(productId: UUID, customerId: UUID): Order {
         val order = getOrCreateDraftOrder(customerId)
