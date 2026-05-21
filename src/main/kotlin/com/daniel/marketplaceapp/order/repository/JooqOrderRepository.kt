@@ -43,19 +43,21 @@ class JooqOrderRepository(
     }
 
     private fun update(order: Order): Order {
+        val newVersion = order.version?.inc()
         val updateRows = dsl.update(ORDERS)
             .set(ORDERS.STATUS, order.status.name)
             .set(ORDERS.TOTAL_AMOUNT, order.totalAmount.amount)
             .set(ORDERS.UPDATED_AT, order.updatedAt?.toLocalDateTime())
-            .set(ORDERS.VERSION, order.version?.inc())
+            .set(ORDERS.VERSION, newVersion)
             .where(ORDERS.ID.eq(order.id))
             .and(ORDERS.VERSION.eq(order.version))
             .execute()
         if (updateRows == 0) {
             throw OptimisticLockingFailureException("Row was updated or deleted by another transaction")
         }
-        val fetchedItems = findAllItemsByOrderId(requireNotNull(order.id))
+        order.version = newVersion
 
+        val fetchedItems = findAllItemsByOrderId(requireNotNull(order.id))
         val updateDiff = handleDiff(fetchedItems, order.items)
         if (updateDiff.forInsert.isNotEmpty()) {
             insertItems(updateDiff.forInsert, requireNotNull(order.id))
@@ -118,6 +120,23 @@ class JooqOrderRepository(
             .leftJoin(ORDER_ITEMS).on(ORDERS.ID.eq(ORDER_ITEMS.ORDER_ID))
             .where(ORDERS.CUSTOMER_ID.eq(customerId))
             .and(ORDERS.STATUS.eq(OrderStatus.DRAFT.name))
+            .fetch()
+            .ifEmpty { return null }
+
+        val order = toOrderDomain(records.first())
+        if (isCartEmpty(records)) return order
+
+        records.forEach { record ->
+            order.items.add(toOrderItemDomain(record))
+        }
+        return order
+    }
+
+    override fun findById(id: UUID): Order? {
+        val records = dsl.select()
+            .from(ORDERS)
+            .leftJoin(ORDER_ITEMS).on(ORDERS.ID.eq(ORDER_ITEMS.ORDER_ID))
+            .where(ORDERS.ID.eq(id))
             .fetch()
             .ifEmpty { return null }
 

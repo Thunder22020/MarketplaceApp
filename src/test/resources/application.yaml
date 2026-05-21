@@ -18,3 +18,7 @@ app:
   jwt:
     secret-key: test-secret-key-test-secret-key-test-secret-key
     access-expiration: 3600000
+  payment:
+    shop:
+      secret-key: test-secret-key-test-secret-key-test-secret-key
+      id: 123123

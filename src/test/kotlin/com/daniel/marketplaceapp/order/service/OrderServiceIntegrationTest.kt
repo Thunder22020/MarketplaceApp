@@ -7,8 +7,12 @@ import com.daniel.marketplaceapp.order.exception.OrderItemNotFoundException
 import com.daniel.marketplaceapp.order.exception.OrderNotFoundException
 import com.daniel.marketplaceapp.order.exception.SomeProductsHaveChangedException
 import com.daniel.marketplaceapp.order.repository.OrderRepository
+import com.daniel.marketplaceapp.payment.dto.PaymentProviderResponse
+import com.daniel.marketplaceapp.payment.exception.PaymentCreationFailedException
+import com.daniel.marketplaceapp.payment.provider.PaymentProviderClient
 import com.daniel.marketplaceapp.product.dto.UpdateProductRequest
 import com.daniel.marketplaceapp.product.service.ProductService
+import com.daniel.marketplaceapp.testsupport.fixtures.randomString
 import com.daniel.marketplaceapp.testsupport.steps.ProductSteps
 import com.daniel.marketplaceapp.testsupport.steps.UserSteps
 import io.kotest.assertions.throwables.shouldThrow
@@ -22,10 +26,14 @@ import java.math.BigDecimal
 import java.util.UUID
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.TestInstance
+import org.mockito.kotlin.any
+import org.mockito.kotlin.whenever
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.transaction.annotation.Transactional
 import kotlin.test.Test
+
 
 @Transactional
 @SpringBootTest
@@ -46,6 +54,9 @@ class OrderServiceIntegrationTest {
     @Autowired
     private lateinit var productSteps: ProductSteps
 
+    @MockitoBean
+    private lateinit var paymentProviderClient: PaymentProviderClient
+
     private lateinit var userId: UUID
 
     @BeforeAll
@@ -55,6 +66,8 @@ class OrderServiceIntegrationTest {
 
     @Test
     fun `should checkout draft order`() {
+        mockPaymentProviderClient()
+
         val product1 = productSteps.create(sellerId = userId)
         val product2 = productSteps.create(sellerId = userId)
 
@@ -65,12 +78,30 @@ class OrderServiceIntegrationTest {
         val totalAmount = orderRepository.findDraftByCustomerId(userId)
             .shouldNotBeNull().totalAmount
 
-        val order = orderService.checkout(userId)
+        val (order, payment) = orderService.checkout(userId)
 
         order.updatedAt.shouldNotBeNull()
         order.totalAmount shouldBe totalAmount
         order.status shouldBe OrderStatus.PENDING_PAYMENT
+        payment.orderId shouldBe order.id
     }
+
+    @Test
+    fun `should mark order failed when payment failed`() {
+        mockPaymentProviderClientWithException()
+        val product1 = productSteps.create(sellerId = userId)
+        val order = orderService.addItemToCart(product1.id!!, userId)
+
+        shouldThrow<PaymentCreationFailedException>{
+            orderService.checkout(userId)
+        }
+
+        val result = orderRepository.findById(order.id!!).shouldNotBeNull()
+
+        result.updatedAt.shouldNotBeNull()
+        result.status shouldBe OrderStatus.FAILED
+    }
+
 
     @Test
     fun `should process product price change on checkout`() {
@@ -271,5 +302,20 @@ class OrderServiceIntegrationTest {
         shouldThrow<OrderNotFoundException> {
             orderService.getCartItems(userId)
         }
+    }
+
+    private fun mockPaymentProviderClient() {
+        whenever(paymentProviderClient.createPayment(any()))
+            .thenReturn(
+                PaymentProviderResponse(
+                    externalId = UUID.randomUUID().toString(),
+                    confirmationUrl = randomString()
+                )
+            )
+    }
+
+    private fun mockPaymentProviderClientWithException() {
+        whenever(paymentProviderClient.createPayment(any()))
+            .thenThrow(RuntimeException("Something went wrong"))
     }
 }

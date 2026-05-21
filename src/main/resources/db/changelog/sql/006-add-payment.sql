@@ -4,7 +4,7 @@
 CREATE TABLE payments(
     id UUID NOT NULL,
     order_id UUID NOT NULL,
-    external_id UUID,
+    external_id VARCHAR(256),
     confirmation_url VARCHAR(255),
     status VARCHAR(255) NOT NULL,
     amount DECIMAL(19, 2) NOT NULL,

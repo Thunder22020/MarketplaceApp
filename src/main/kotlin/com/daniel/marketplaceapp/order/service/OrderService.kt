@@ -3,10 +3,13 @@ package com.daniel.marketplaceapp.order.service
 import com.daniel.marketplaceapp.core.domain.Money
 import com.daniel.marketplaceapp.order.domain.Order
 import com.daniel.marketplaceapp.order.domain.OrderItem
+import com.daniel.marketplaceapp.order.dto.CheckoutResult
 import com.daniel.marketplaceapp.order.enums.OrderStatus
 import com.daniel.marketplaceapp.order.exception.OrderNotFoundException
 import com.daniel.marketplaceapp.order.exception.SomeProductsHaveChangedException
 import com.daniel.marketplaceapp.order.repository.OrderRepository
+import com.daniel.marketplaceapp.payment.exception.PaymentCreationFailedException
+import com.daniel.marketplaceapp.payment.service.PaymentService
 import com.daniel.marketplaceapp.product.service.ProductService
 import java.time.Instant
 import java.util.UUID
@@ -17,9 +20,15 @@ import org.springframework.transaction.annotation.Transactional
 class OrderService(
     private val orderRepository: OrderRepository,
     private val productService: ProductService,
+    private val paymentService: PaymentService,
 ) {
-    @Transactional(noRollbackFor = [SomeProductsHaveChangedException::class])
-    fun checkout(customerId: UUID): Order {
+    @Transactional(
+        noRollbackFor = [
+            SomeProductsHaveChangedException::class,
+            PaymentCreationFailedException::class
+        ]
+    )
+    fun checkout(customerId: UUID): CheckoutResult {
         val order = getDraftOrderOrThrow(customerId)
         order.checkItemsNotEmptyOrThrow()
         val orderItemsByProductIds = order.items.associateBy { it.productId }
@@ -30,7 +39,20 @@ class OrderService(
             throw SomeProductsHaveChangedException("Order ${order.id} has been changed")
         }
         order.updateStatus(OrderStatus.PENDING_PAYMENT)
-        return orderRepository.save(order)
+        val savedOrder = orderRepository.save(order)
+
+        val payment = try {
+            paymentService.createPaymentForOrder(savedOrder)
+        } catch (e: PaymentCreationFailedException) {
+            savedOrder.updateStatus(OrderStatus.FAILED)
+            orderRepository.save(savedOrder)
+            throw e
+        }
+
+        return CheckoutResult(
+            order = savedOrder,
+            payment = payment
+        )
     }
 
     @Transactional

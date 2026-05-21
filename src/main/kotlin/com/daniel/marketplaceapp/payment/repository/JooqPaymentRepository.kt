@@ -3,6 +3,7 @@ package com.daniel.marketplaceapp.payment.repository
 import com.daniel.marketplaceapp.core.mapper.toLocalDateTime
 import com.daniel.marketplaceapp.jooq.Tables.PAYMENTS
 import com.daniel.marketplaceapp.payment.domain.Payment
+import com.daniel.marketplaceapp.payment.mapper.toDomain
 import java.util.UUID
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
@@ -11,6 +12,18 @@ import org.springframework.stereotype.Repository
 class JooqPaymentRepository(
     private val dsl: DSLContext
 ): PaymentRepository {
+    override fun findById(id: UUID) =
+        dsl.selectFrom(PAYMENTS)
+            .where(PAYMENTS.ID.eq(id))
+            .fetchOne()
+            ?.toDomain()
+
+    override fun findByOrderId(orderId: UUID) =
+        dsl.selectFrom(PAYMENTS)
+            .where(PAYMENTS.ORDER_ID.eq(orderId))
+            .fetchOne()
+            ?.toDomain()
+
     override fun save(payment: Payment) =
         if (payment.id == null) {
             insert(payment)

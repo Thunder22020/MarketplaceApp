@@ -1,8 +1,8 @@
 package com.daniel.marketplaceapp.order.controller
 
 import com.daniel.marketplaceapp.core.annotations.CurrentUserId
+import com.daniel.marketplaceapp.order.dto.CheckoutResponse
 import com.daniel.marketplaceapp.order.dto.OrderItemResponse
-import com.daniel.marketplaceapp.order.dto.OrderResponse
 import com.daniel.marketplaceapp.order.mapper.toResponse
 import com.daniel.marketplaceapp.order.service.OrderService
 import java.util.UUID
@@ -43,8 +43,8 @@ class OrderController(
     }
 
     @PostMapping("/checkout")
-    fun checkout(@CurrentUserId customerId: UUID): ResponseEntity<OrderResponse> {
-        val order = orderService.checkout(customerId).toResponse()
-        return ResponseEntity.ok(order)
+    fun checkout(@CurrentUserId customerId: UUID): ResponseEntity<CheckoutResponse> {
+        val result = orderService.checkout(customerId).toResponse()
+        return ResponseEntity.ok(result)
     }
 }

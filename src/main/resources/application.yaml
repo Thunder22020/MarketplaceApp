@@ -28,3 +28,7 @@ app:
   jwt:
     secret-key: ${JWT_SECRET}
     access-expiration: 3600000
+  payment:
+    shop:
+      secret-key: ${SHOP_SECRET_KEY}
+      id: ${SHOP_ID}
