@@ -8,4 +8,6 @@ fun randomUsername(): String = "user_${randomString()}"
 
 fun randomPassword(): String = "password_${randomString()}"
 
+fun randomUrl(): String = "https://${randomString()}"
+
 const val TOO_SHORT_VALUE = "."
