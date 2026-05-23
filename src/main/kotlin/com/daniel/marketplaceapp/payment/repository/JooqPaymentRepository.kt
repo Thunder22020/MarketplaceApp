@@ -12,18 +12,6 @@ import org.springframework.stereotype.Repository
 class JooqPaymentRepository(
     private val dsl: DSLContext
 ): PaymentRepository {
-    override fun findById(id: UUID) =
-        dsl.selectFrom(PAYMENTS)
-            .where(PAYMENTS.ID.eq(id))
-            .fetchOne()
-            ?.toDomain()
-
-    override fun findByOrderId(orderId: UUID) =
-        dsl.selectFrom(PAYMENTS)
-            .where(PAYMENTS.ORDER_ID.eq(orderId))
-            .fetchOne()
-            ?.toDomain()
-
     override fun save(payment: Payment) =
         if (payment.id == null) {
             insert(payment)
@@ -57,4 +45,22 @@ class JooqPaymentRepository(
             .execute()
         return payment
     }
+
+    override fun findById(id: UUID) =
+        dsl.selectFrom(PAYMENTS)
+            .where(PAYMENTS.ID.eq(id))
+            .fetchOne()
+            ?.toDomain()
+
+    override fun findByOrderId(orderId: UUID) =
+        dsl.selectFrom(PAYMENTS)
+            .where(PAYMENTS.ORDER_ID.eq(orderId))
+            .fetchOne()
+            ?.toDomain()
+
+    override fun findByExternalId(externalId: String) =
+        dsl.selectFrom(PAYMENTS)
+            .where(PAYMENTS.EXTERNAL_ID.eq(externalId))
+            .fetchOne()
+            ?.toDomain()
 }

@@ -8,7 +8,9 @@ import com.daniel.marketplaceapp.order.enums.OrderStatus
 import com.daniel.marketplaceapp.order.exception.OrderNotFoundException
 import com.daniel.marketplaceapp.order.exception.SomeProductsHaveChangedException
 import com.daniel.marketplaceapp.order.repository.OrderRepository
+import com.daniel.marketplaceapp.payment.enums.PaymentStatus
 import com.daniel.marketplaceapp.payment.exception.PaymentCreationFailedException
+import com.daniel.marketplaceapp.payment.exception.PaymentNotFoundException
 import com.daniel.marketplaceapp.payment.service.PaymentService
 import com.daniel.marketplaceapp.product.service.ProductService
 import java.time.Instant
@@ -56,6 +58,19 @@ class OrderService(
     }
 
     @Transactional
+    fun cancelOrder(customerId: UUID) {
+        val order = getPendingOrderOrThrow(customerId)
+        if (order.status != OrderStatus.PENDING_PAYMENT) {
+            throw OrderNotFoundException("Order ${order.id} in PENDING_PAYMENT status not found")
+        }
+        val payment = paymentService.getByOrderId(order.id!!)
+        if (payment.status != PaymentStatus.PENDING) {
+            throw PaymentNotFoundException("Payment ${order.id} in PENDING status not found")
+        }
+        paymentService.cancelPayment(payment.externalId!!)
+    }
+
+    @Transactional
     fun addItemToCart(productId: UUID, customerId: UUID): Order {
         val order = getOrCreateDraftOrder(customerId)
         val product = productService.getByIdOrThrow(productId)
@@ -97,8 +112,11 @@ class OrderService(
         )
     }
 
-    private fun getDraftOrderOrThrow(customerId: UUID): Order {
-        return getDraftOrder(customerId)
+    private fun getDraftOrderOrThrow(customerId: UUID) =
+        getDraftOrder(customerId)
             ?: throw OrderNotFoundException("Order was not found for customer $customerId")
-    }
+
+    private fun getPendingOrderOrThrow(customerId: UUID) =
+        orderRepository.findPendingByCustomerId(customerId)
+            ?: throw OrderNotFoundException("Order was not found for customer $customerId")
 }

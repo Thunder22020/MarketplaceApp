@@ -73,7 +73,7 @@ class GlobalExceptionHandler {
         val body = ApiError(
             status = HttpStatus.INTERNAL_SERVER_ERROR.value(),
             code = "INTERNAL_SERVER_ERROR",
-            message = "Something went wrong",
+            message = ex.message ?: "Something went wrong",
             path = request.requestURI,
         )
         return ResponseEntity.status(500).body(body)

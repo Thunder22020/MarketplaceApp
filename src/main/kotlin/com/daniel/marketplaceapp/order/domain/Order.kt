@@ -57,6 +57,16 @@ class Order(
         return changed
     }
 
+    fun markPaid() {
+        this.status = OrderStatus.PAID
+        setUpdatedAt()
+    }
+
+    fun markFailed() {
+        this.status = OrderStatus.FAILED
+        setUpdatedAt()
+    }
+
     fun updateStatus(newStatus: OrderStatus) {
         this.status = newStatus
         setUpdatedAt()

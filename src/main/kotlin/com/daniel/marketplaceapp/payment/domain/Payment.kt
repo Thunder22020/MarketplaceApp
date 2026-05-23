@@ -15,6 +15,11 @@ class Payment(
     val createdAt: Instant,
     var updatedAt: Instant?,
 ) {
+    fun markSucceeded() {
+        this.status = PaymentStatus.SUCCEEDED
+        setUpdatedAt()
+    }
+
     fun markPending(confirmationUrl: String, externalId: String) {
         this.confirmationUrl = confirmationUrl
         this.externalId = externalId

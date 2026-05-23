@@ -4,6 +4,7 @@ import com.daniel.marketplaceapp.yookassa.payment.CreatePaymentRequest
 import com.daniel.marketplaceapp.yookassa.payment.PaymentResponse
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
+import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
@@ -25,6 +26,19 @@ class YooKassaClient(
         }.body()
         return response
     }
+
+    suspend fun cancelPayment(paymentId: String): PaymentResponse {
+        val cancelEndpoint = "$API_ENDPOINT/$paymentId/cancel"
+        val idempotencyKey = UUID.randomUUID().toString()
+        val response: PaymentResponse = client.post(cancelEndpoint) {
+            contentType(ContentType.Application.Json)
+            header("Idempotence-Key", idempotencyKey)
+        }.body()
+        return response
+    }
+
+    suspend fun getPaymentById(paymentId: String) =
+        client.get("$API_ENDPOINT/$paymentId").body<PaymentResponse>()
 
     fun close() {
         client.close()

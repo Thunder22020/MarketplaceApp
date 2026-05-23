@@ -7,9 +7,11 @@ import com.daniel.marketplaceapp.payment.dto.CreatePaymentProviderRequest
 import com.daniel.marketplaceapp.payment.enums.PaymentStatus
 import com.daniel.marketplaceapp.payment.exception.PaymentCannotBeCreatedException
 import com.daniel.marketplaceapp.payment.exception.PaymentCreationFailedException
+import com.daniel.marketplaceapp.payment.exception.PaymentNotFoundException
 import com.daniel.marketplaceapp.payment.provider.PaymentProviderClient
 import com.daniel.marketplaceapp.payment.repository.PaymentRepository
 import java.time.Instant
+import java.util.UUID
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
@@ -44,6 +46,14 @@ class PaymentService(
         )
         return paymentRepository.save(payment)
     }
+
+    @Transactional
+    fun cancelPayment(paymentId: String) =
+        paymentProviderClient.cancelPayment(paymentId)
+
+    fun getByOrderId(orderId: UUID) =
+        paymentRepository.findByOrderId(orderId)
+            ?: throw PaymentNotFoundException("Payment was not found by order id $orderId")
 
     private fun getInitPayment(order: Order) = Payment(
         id = null,

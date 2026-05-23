@@ -35,4 +35,11 @@ class YooKassaPaymentProviderClient(
         )
     }
 
+    override fun cancelPayment(paymentId: String) = runBlocking {
+        yooKassaClient.cancelPayment(paymentId)
+    }
+
+    override fun getPaymentById(paymentId: String) = runBlocking {
+        yooKassaClient.getPaymentById(paymentId)
+    }
 }

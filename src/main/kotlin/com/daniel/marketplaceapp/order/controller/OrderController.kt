@@ -47,4 +47,10 @@ class OrderController(
         val result = orderService.checkout(customerId).toResponse()
         return ResponseEntity.ok(result)
     }
+
+    @PostMapping("/cancel")
+    fun cancel(@CurrentUserId customerId: UUID): ResponseEntity<Void> {
+        orderService.cancelOrder(customerId)
+        return ResponseEntity.noContent().build()
+    }
 }

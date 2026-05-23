@@ -114,12 +114,18 @@ class JooqOrderRepository(
         dsl.batch(queries).execute()
     }
 
-    override fun findDraftByCustomerId(customerId: UUID): Order? {
+    override fun findDraftByCustomerId(customerId: UUID) =
+        findByCustomerIdAndStatus(customerId, OrderStatus.DRAFT)
+
+    override fun findPendingByCustomerId(customerId: UUID) =
+        findByCustomerIdAndStatus(customerId, OrderStatus.PENDING_PAYMENT)
+
+    private fun findByCustomerIdAndStatus(customerId: UUID, status: OrderStatus): Order? {
         val records = dsl.select()
             .from(ORDERS)
             .leftJoin(ORDER_ITEMS).on(ORDERS.ID.eq(ORDER_ITEMS.ORDER_ID))
             .where(ORDERS.CUSTOMER_ID.eq(customerId))
-            .and(ORDERS.STATUS.eq(OrderStatus.DRAFT.name))
+            .and(ORDERS.STATUS.eq(status.name))
             .fetch()
             .ifEmpty { return null }
 
