@@ -36,7 +36,7 @@ class SecurityConfiguration(
             req.requestMatchers(
                 "/api/auth/login",
                 "/api/auth/register",
-                "webhooks/yookassa"
+                "/webhooks/yookassa"
             ).permitAll()
             .anyRequest()
             .authenticated()
