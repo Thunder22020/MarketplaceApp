@@ -88,6 +88,7 @@ class Order(
                 unitPrice = product.price.copy(),
                 quantity = 1,
                 orderId = this.id,
+                sellerId = product.sellerId
             )
             this.addItem(orderItem)
         }

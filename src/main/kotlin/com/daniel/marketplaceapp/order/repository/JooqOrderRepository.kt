@@ -86,6 +86,7 @@ class JooqOrderRepository(
                 .set(ORDER_ITEMS.PRODUCT_ID, item.productId)
                 .set(ORDER_ITEMS.QUANTITY, item.quantity)
                 .set(ORDER_ITEMS.UNIT_PRICE, item.unitPrice.amount)
+                .set(ORDER_ITEMS.SELLER_ID, item.sellerId)
         }
         dsl.batch(queries).execute()
     }
@@ -171,6 +172,7 @@ class JooqOrderRepository(
         productId = requireNotNull(record.get(ORDER_ITEMS.PRODUCT_ID)),
         unitPrice = Money(requireNotNull(record.get(ORDER_ITEMS.UNIT_PRICE))),
         quantity = requireNotNull(record.get(ORDER_ITEMS.QUANTITY)),
+        sellerId = requireNotNull(record.get(ORDER_ITEMS.SELLER_ID)),
     )
 
     private fun handleDiff(

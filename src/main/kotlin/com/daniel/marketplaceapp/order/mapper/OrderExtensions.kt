@@ -11,6 +11,7 @@ import com.daniel.marketplaceapp.order.dto.PaymentCheckoutResponse
 fun OrderItem.toResponse() = OrderItemResponse(
     orderId = requireNotNull(orderId),
     productId = requireNotNull(productId),
+    sellerId = requireNotNull(sellerId),
     unitPrice = unitPrice.amount,
     quantity = quantity,
 )

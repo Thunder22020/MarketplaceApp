@@ -5,7 +5,8 @@ import java.util.UUID
 
 class OrderItem(
     var orderId: UUID?,
-    var productId: UUID,
+    val productId: UUID,
+    val sellerId: UUID,
     var unitPrice: Money,
     var quantity: Int,
 ) {
