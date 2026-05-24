@@ -1,5 +1,6 @@
 package com.daniel.marketplaceapp.payment.service
 
+import com.daniel.marketplaceapp.balance.service.BalanceTransactionService
 import com.daniel.marketplaceapp.order.domain.Order
 import com.daniel.marketplaceapp.order.exception.OrderNotFoundException
 import com.daniel.marketplaceapp.order.repository.OrderRepository
@@ -18,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional
 class PaymentWebhookService(
     private val paymentRepository: PaymentRepository,
     private val orderRepository: OrderRepository,
+    private val balanceTransactionService: BalanceTransactionService,
 ) {
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -58,6 +60,7 @@ class PaymentWebhookService(
 
         paymentRepository.save(payment)
         orderRepository.save(order)
+        balanceTransactionService.creditSellersForPaidOrder(order, payment)
     }
 
     private fun processCanceledPayment(

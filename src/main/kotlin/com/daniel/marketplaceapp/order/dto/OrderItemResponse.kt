@@ -4,8 +4,9 @@ import java.math.BigDecimal
 import java.util.UUID
 
 data class OrderItemResponse(
-    var orderId: UUID,
-    var productId: UUID,
+    val orderId: UUID,
+    val productId: UUID,
+    val sellerId: UUID,
     var unitPrice: BigDecimal,
     var quantity: Int,
 )
