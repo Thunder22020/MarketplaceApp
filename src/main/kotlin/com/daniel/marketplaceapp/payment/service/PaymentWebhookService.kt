@@ -10,8 +10,10 @@ import com.daniel.marketplaceapp.payment.exception.PaymentNotFoundException
 import com.daniel.marketplaceapp.payment.repository.PaymentRepository
 import com.daniel.marketplaceapp.yookassa.payment.YooKassaPaymentStatus
 import com.daniel.marketplaceapp.yookassa.webhook.dto.YooKassaWebhookRequest
+import java.time.Duration
 import java.util.UUID
 import org.slf4j.LoggerFactory
+import org.springframework.data.redis.core.StringRedisTemplate
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
@@ -20,12 +22,22 @@ class PaymentWebhookService(
     private val paymentRepository: PaymentRepository,
     private val orderRepository: OrderRepository,
     private val balanceTransactionService: BalanceTransactionService,
+    private val redisTemplate: StringRedisTemplate
 ) {
 
     private val log = LoggerFactory.getLogger(javaClass)
 
     @Transactional
     fun handleYooKassaWebhook(request: YooKassaWebhookRequest) {
+        val redisKey = getRedisKey(request)
+        if (redisTemplate.opsForValue().get(redisKey) != null) {
+            log.info(
+                "Cache hit for YooKassa webhook event {}, external payment id {}",
+                request.event,
+                request.`object`.id
+            )
+            return
+        }
         val payment = findPaymentByExternalIdOrThrow(request.`object`.id)
         val order = findOrderByIdOrThrow(payment.orderId)
         resolveWebhook(request, payment, order)
@@ -40,9 +52,9 @@ class PaymentWebhookService(
             isSuccessfulPayment(request) && payment.isSucceeded() ->
                 logRetrySuccessWebhook(payment)
             isSuccessfulPayment(request) && payment.isPending() ->
-                processSuccessfulPayment(payment, order)
+                processSuccessfulPayment(payment, order, request)
             isCanceledPayment(request) && payment.isPending() ->
-                processCanceledPayment(payment, order)
+                processCanceledPayment(payment, order, request)
             isCanceledPayment(request) && payment.isFailed() ->
                 logRetryCanceledWebhook(payment)
             else -> logIgnoredWebhook(request, payment)
@@ -52,6 +64,7 @@ class PaymentWebhookService(
     private fun processSuccessfulPayment(
         payment: Payment,
         order: Order,
+        req: YooKassaWebhookRequest
     ) {
         log.info("Processing successful YooKassa payment. paymentId={}", payment.id)
 
@@ -61,11 +74,14 @@ class PaymentWebhookService(
         paymentRepository.save(payment)
         orderRepository.save(order)
         balanceTransactionService.creditSellersForPaidOrder(order, payment)
+
+        cacheRequest(req)
     }
 
     private fun processCanceledPayment(
         payment: Payment,
         order: Order,
+        req: YooKassaWebhookRequest
     ) {
         log.info("Processing canceled YooKassa payment. paymentId={}", payment.id)
 
@@ -74,6 +90,8 @@ class PaymentWebhookService(
 
         paymentRepository.save(payment)
         orderRepository.save(order)
+
+        cacheRequest(req)
     }
 
     private fun logRetrySuccessWebhook(payment: Payment) {
@@ -127,6 +145,14 @@ class PaymentWebhookService(
 
     private fun Payment.isFailed(): Boolean =
         status == PaymentStatus.FAILED
+
+    private fun getRedisKey(req: YooKassaWebhookRequest) =
+        "webhook:yookassa:${req.event}:${req.`object`.id}"
+
+    private fun cacheRequest(req: YooKassaWebhookRequest) {
+        val redisKey = getRedisKey(req)
+        redisTemplate.opsForValue().set(redisKey, "1", Duration.ofHours(1))
+    }
 
     companion object {
         private const val PAYMENT_SUCCEEDED_EVENT = "payment.succeeded"
