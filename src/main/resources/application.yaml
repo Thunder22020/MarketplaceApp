@@ -22,6 +22,12 @@ spring:
             platform: org.hibernate.service.jta.JtaService
   liquibase:
     change-log: classpath:db/changelog/db.changelog-master.yaml
+  cache:
+    type: redis
+  data:
+    redis:
+      host: localhost
+      port: 6379
 app:
   cookie:
     secure: false

@@ -1,5 +1,6 @@
 package com.daniel.marketplaceapp.core.exception
 
+import com.daniel.marketplaceapp.security.exception.TooManyRequestsException
 import jakarta.servlet.http.HttpServletRequest
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
@@ -61,6 +62,23 @@ class GlobalExceptionHandler {
             path = request.requestURI,
         )
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body)
+    }
+
+    @ExceptionHandler(TooManyRequestsException::class)
+    fun handleTooManyRequestsException(
+        ex: TooManyRequestsException,
+        request: HttpServletRequest,
+    ): ResponseEntity<ApiError> {
+        val body = ApiError(
+            status = ex.status.value(),
+            code = ex.code,
+            message = ex.message ?: "Too many requests",
+            path = request.requestURI,
+        )
+        return ResponseEntity
+            .status(ex.status)
+            .header("Retry-After", ex.retryAfterValue)
+            .body(body)
     }
 
     @ExceptionHandler(Exception::class)
