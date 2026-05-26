@@ -3,6 +3,7 @@ package com.daniel.marketplaceapp.product.repository
 import com.daniel.marketplaceapp.product.domain.Product
 import com.daniel.marketplaceapp.product.enums.ProductStatus
 import java.util.UUID
+import org.springframework.data.domain.Pageable
 
 interface ProductRepository {
     fun save(product: Product): Product
@@ -13,10 +14,11 @@ interface ProductRepository {
 
     fun findByIdAndSellerId(id: UUID, sellerId: UUID): Product?
 
-    fun findAllByStatus(status: ProductStatus): List<Product>
+    fun findAllByStatus(pageable: Pageable, status: ProductStatus): List<Product>
 
     fun findAllBySellerIdAndStatusList(
         sellerId: UUID,
+        pageable: Pageable,
         statusList: Collection<ProductStatus>,
     ): List<Product>
 }

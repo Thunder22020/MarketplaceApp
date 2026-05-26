@@ -2,6 +2,7 @@ package com.daniel.marketplaceapp.product.controller
 
 import com.daniel.marketplaceapp.core.annotations.CurrentUserId
 import com.daniel.marketplaceapp.product.dto.CreateProductRequest
+import com.daniel.marketplaceapp.product.dto.PagedProductResponse
 import com.daniel.marketplaceapp.product.dto.ProductResponse
 import com.daniel.marketplaceapp.product.dto.UpdateProductRequest
 import com.daniel.marketplaceapp.product.mapper.toResponse
@@ -72,9 +73,31 @@ class ProductController(
     @GetMapping(params = ["sellerId"])
     fun getAllBySellerId(
         @RequestParam("sellerId", required = true) sellerId: UUID,
+        @RequestParam("page", required = false) page: Int = 0,
         @CurrentUserId currentUserId: UUID
-    ) = productService.getAllBySellerId(sellerId, currentUserId).map { it.toResponse() }
+    ): PagedProductResponse {
+        val products = productService.getAllBySellerId(
+            sellerId,
+            currentUserId,
+            page
+        ).map { it.toResponse() }
+        return PagedProductResponse(
+            page = page,
+            itemsCount = products.size,
+            products = products
+        )
+    }
 
     @GetMapping
-    fun getAll() = productService.getAll().map { it.toResponse() }
+    fun getAll(
+        @RequestParam("page", required = false) page: Int = 0
+    ): PagedProductResponse {
+        val products = productService.getAll(page).map { it.toResponse() }
+        return PagedProductResponse(
+            page = page,
+            itemsCount = products.size,
+            products = products
+        )
+    }
+
 }

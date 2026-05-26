@@ -9,7 +9,7 @@ import com.daniel.marketplaceapp.product.enums.ProductStatus
 import java.util.UUID
 import org.jooq.DSLContext
 import org.jooq.Record
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
+import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Repository
 
 @Repository
@@ -72,20 +72,25 @@ class JooqProductRepository(
         .fetchOne()
         ?.toDomain()
 
-    override fun findAllByStatus(status: ProductStatus) =
+    override fun findAllByStatus(pageable: Pageable, status: ProductStatus) =
         dsl.selectFrom(PRODUCTS)
             .where(PRODUCTS.STATUS.eq(status.name))
             .orderBy(PRODUCTS.CREATED_AT.desc())
+            .limit(pageable.pageSize)
+            .offset(pageable.offset)
             .fetch()
             .map { it.toDomain() }
 
     override fun findAllBySellerIdAndStatusList(
         sellerId: UUID,
+        pageable: Pageable,
         statusList: Collection<ProductStatus>
     ) = dsl.selectFrom(PRODUCTS)
         .where(PRODUCTS.SELLER_ID.eq(sellerId))
         .and(PRODUCTS.STATUS.`in`(statusList.map { it.name }))
         .orderBy(PRODUCTS.CREATED_AT.desc())
+        .limit(pageable.pageSize)
+        .offset(pageable.offset)
         .fetch()
         .map { it.toDomain() }
 
