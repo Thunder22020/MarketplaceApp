@@ -4,6 +4,7 @@ import com.daniel.marketplaceapp.testsupport.annotations.ControllerIntegrationTe
 import com.daniel.marketplaceapp.testsupport.fixtures.TOO_SHORT_VALUE
 import com.daniel.marketplaceapp.testsupport.fixtures.TestUser
 import com.daniel.marketplaceapp.testsupport.fixtures.randomPassword
+import com.daniel.marketplaceapp.testsupport.fixtures.randomString
 import com.daniel.marketplaceapp.testsupport.fixtures.randomUsername
 import com.daniel.marketplaceapp.testsupport.steps.UserSteps
 import com.daniel.marketplaceapp.user.dto.request.LoginRequest
@@ -15,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.MediaType
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers.header
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 
@@ -135,8 +137,66 @@ class AuthControllerIntegrationTest {
             .andExpect(jsonPath("$.accessToken").doesNotExist())
     }
 
+    @Test
+    fun `should return too many requests when login rate limit exceeded`() {
+        val ip = "test-login-${randomString()}"
+        val loginRequest = LoginRequest(randomUsername(), randomPassword())
+        val requestBody = objectMapper.writeValueAsString(loginRequest)
+
+        repeat(LOGIN_RATE_LIMIT) {
+            mockMvc.perform(
+                post(LOGIN_URL)
+                    .header(FORWARDED_FOR_HEADER, ip)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(requestBody)
+            )
+                .andExpect(status().isNotFound)
+        }
+
+        mockMvc.perform(
+            post(LOGIN_URL)
+                .header(FORWARDED_FOR_HEADER, ip)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(requestBody)
+        )
+            .andExpect(status().isTooManyRequests)
+            .andExpect(header().exists("Retry-After"))
+            .andExpect(jsonPath("$.code").value("TOO_MANY_REQUESTS"))
+    }
+
+    @Test
+    fun `should return too many requests when register rate limit exceeded`() {
+        val ip = "test-register-${randomString()}"
+
+        repeat(REGISTER_RATE_LIMIT) {
+            val request = RegisterRequest(randomUsername(), randomPassword())
+
+            mockMvc.perform(
+                post(REGISTER_URL)
+                    .header(FORWARDED_FOR_HEADER, ip)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(request))
+            )
+                .andExpect(status().isOk)
+        }
+
+        val limitedRequest = RegisterRequest(randomUsername(), randomPassword())
+        mockMvc.perform(
+            post(REGISTER_URL)
+                .header(FORWARDED_FOR_HEADER, ip)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(limitedRequest))
+        )
+            .andExpect(status().isTooManyRequests)
+            .andExpect(header().exists("Retry-After"))
+            .andExpect(jsonPath("$.code").value("TOO_MANY_REQUESTS"))
+    }
+
     companion object {
         private const val REGISTER_URL = "/api/auth/register"
         private const val LOGIN_URL = "/api/auth/login"
+        private const val FORWARDED_FOR_HEADER = "X-Forwarded-For"
+        private const val LOGIN_RATE_LIMIT = 10
+        private const val REGISTER_RATE_LIMIT = 5
     }
 }
