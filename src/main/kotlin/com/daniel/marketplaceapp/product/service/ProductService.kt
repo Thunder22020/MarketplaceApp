@@ -6,10 +6,12 @@ import com.daniel.marketplaceapp.product.dto.CreateProductRequest
 import com.daniel.marketplaceapp.product.dto.UpdateProductRequest
 import com.daniel.marketplaceapp.product.enums.ProductStatus
 import com.daniel.marketplaceapp.product.exception.EmptyUpdateProductRequestException
+import com.daniel.marketplaceapp.product.exception.PageNumberIsNegativeException
 import com.daniel.marketplaceapp.product.exception.ProductNotFoundException
 import com.daniel.marketplaceapp.product.repository.ProductRepository
 import java.time.Instant
 import java.util.UUID
+import org.springframework.data.domain.PageRequest
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
@@ -48,14 +50,30 @@ class ProductService(
         updateStatus(productId, currentUserId, ProductStatus.ACTIVE)
     }
 
-    fun getAll() = productRepository.findAllByStatus(ProductStatus.ACTIVE)
+    @Transactional(readOnly = true)
+    fun getAll(page: Int = 0): List<Product> {
+        validatePageParam(page)
+        val products = productRepository.findAllByStatus(
+            PageRequest.of(page, PAGE_SIZE),
+            ProductStatus.ACTIVE
+        )
+        return products
+    }
+
+    @Transactional(readOnly = true)
+    fun getAllBySellerId(sellerId: UUID, currentUserId: UUID, page: Int = 0): List<Product> {
+        validatePageParam(page)
+        val pageable = PageRequest.of(page, PAGE_SIZE)
+        val visibleStatuses = getVisibleStatuses(sellerId, currentUserId)
+        val products = productRepository.findAllBySellerIdAndStatusList(
+            sellerId,
+            pageable,
+            visibleStatuses
+        )
+        return products
+    }
 
     fun getAllByIds(ids: Collection<UUID>) = productRepository.findAllByIds(ids)
-
-    fun getAllBySellerId(sellerId: UUID, currentUserId: UUID): List<Product> {
-        val visibleStatuses = getVisibleStatuses(sellerId, currentUserId)
-        return productRepository.findAllBySellerIdAndStatusList(sellerId, visibleStatuses)
-    }
 
     fun getByIdOrThrow(id: UUID) =
         productRepository.findById(id)
@@ -100,5 +118,15 @@ class ProductService(
         if (req.title == null && req.description == null && req.price == null) {
             throw EmptyUpdateProductRequestException("Update product request is empty")
         }
+    }
+
+    private fun validatePageParam(page: Int) {
+        if (page < 0) {
+            throw PageNumberIsNegativeException("Page must be greater than zero")
+        }
+    }
+
+    companion object {
+        private const val PAGE_SIZE = 20
     }
 }

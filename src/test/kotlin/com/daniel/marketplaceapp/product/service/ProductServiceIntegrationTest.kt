@@ -4,6 +4,7 @@ import com.daniel.marketplaceapp.product.dto.CreateProductRequest
 import com.daniel.marketplaceapp.product.dto.UpdateProductRequest
 import com.daniel.marketplaceapp.product.enums.ProductStatus
 import com.daniel.marketplaceapp.product.exception.EmptyUpdateProductRequestException
+import com.daniel.marketplaceapp.product.exception.PageNumberIsNegativeException
 import com.daniel.marketplaceapp.product.exception.ProductAlreadyDeletedException
 import com.daniel.marketplaceapp.product.exception.ProductNotFoundException
 import com.daniel.marketplaceapp.product.repository.ProductRepository
@@ -153,6 +154,31 @@ class ProductServiceIntegrationTest {
         foundHiddenProduct.title shouldBe hiddenProduct.title
         foundActiveProduct.status shouldBe ProductStatus.ACTIVE
         foundActiveProduct.title shouldBe activeProduct.title
+    }
+
+    @Test
+    fun `should paginate products by seller`() {
+        val sellerId = requireNotNull(userSteps.createUser().id)
+        val createdProductIds = (1..21)
+            .map { productSteps.create(sellerId = sellerId).id }
+            .toSet()
+
+        val firstPage = productService.getAllBySellerId(sellerId, sellerId, page = 0)
+        val secondPage = productService.getAllBySellerId(sellerId, sellerId, page = 1)
+        val foundProductIds = (firstPage + secondPage)
+            .map { it.id }
+            .toSet()
+
+        firstPage.shouldHaveSize(20)
+        secondPage.shouldHaveSize(1)
+        foundProductIds shouldBe createdProductIds
+    }
+
+    @Test
+    fun `should throw when page number is negative`() {
+        shouldThrow<PageNumberIsNegativeException> {
+            productService.getAll(page = -1)
+        }
     }
 
     @Test
