@@ -2,11 +2,13 @@
 spring:
   application:
     name: MarketplaceApp
+
   datasource:
     url: jdbc:postgresql://localhost:5432/marketplace_db
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
+
   jpa:
     hibernate:
       ddl-auto: none
@@ -20,14 +22,41 @@ spring:
         transaction:
           jta:
             platform: org.hibernate.service.jta.JtaService
+
   liquibase:
     change-log: classpath:db/changelog/db.changelog-master.yaml
+
   cache:
     type: redis
   data:
     redis:
       host: localhost
       port: 6379
+
+  kafka:
+    bootstrap-servers:
+      - localhost:29092
+      - localhost:29093
+      - localhost:29094
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      acks: all
+      retries: 2147483647
+      properties:
+        max.in.flight.requests.per.connection: 5
+        enable.idempotence: true
+
+    consumer:
+      group-id: balance-service
+      auto-offset-reset: latest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring:
+          json:
+            trusted:
+              packages: com.daniel.marketplaceapp.core.event.payment
 app:
   cookie:
     secure: false

@@ -1,6 +1,7 @@
 package com.daniel.marketplaceapp.payment.service
 
 import com.daniel.marketplaceapp.balance.service.BalanceTransactionService
+import com.daniel.marketplaceapp.core.event.payment.PaymentSucceededEvent
 import com.daniel.marketplaceapp.order.domain.Order
 import com.daniel.marketplaceapp.order.exception.OrderNotFoundException
 import com.daniel.marketplaceapp.order.repository.OrderRepository
@@ -14,6 +15,7 @@ import java.time.Duration
 import java.util.UUID
 import org.slf4j.LoggerFactory
 import org.springframework.data.redis.core.StringRedisTemplate
+import org.springframework.kafka.core.KafkaTemplate
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
@@ -21,8 +23,8 @@ import org.springframework.transaction.annotation.Transactional
 class PaymentWebhookService(
     private val paymentRepository: PaymentRepository,
     private val orderRepository: OrderRepository,
-    private val balanceTransactionService: BalanceTransactionService,
-    private val redisTemplate: StringRedisTemplate
+    private val redisTemplate: StringRedisTemplate,
+    private val kafkaTemplate: KafkaTemplate<String, PaymentSucceededEvent>
 ) {
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -73,7 +75,13 @@ class PaymentWebhookService(
 
         paymentRepository.save(payment)
         orderRepository.save(order)
-        balanceTransactionService.creditSellersForPaidOrder(order, payment)
+
+        val event = PaymentSucceededEvent(
+            order.id!!,
+            payment.id!!,
+            order.items
+        )
+        kafkaTemplate.send("payment.succeeded", event)
 
         cacheRequest(req)
     }
