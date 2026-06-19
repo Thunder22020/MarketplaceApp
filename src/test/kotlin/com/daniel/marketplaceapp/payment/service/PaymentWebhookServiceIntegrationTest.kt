@@ -1,13 +1,14 @@
 package com.daniel.marketplaceapp.payment.service
 
-import com.daniel.marketplaceapp.balance.enums.BalanceTransactionType
-import com.daniel.marketplaceapp.balance.repository.BalanceTransactionRepository
 import com.daniel.marketplaceapp.core.domain.Money
+import com.daniel.marketplaceapp.core.event.payment.PaymentSucceededEvent
 import com.daniel.marketplaceapp.order.domain.OrderItem
 import com.daniel.marketplaceapp.order.enums.OrderStatus
 import com.daniel.marketplaceapp.order.repository.OrderRepository
 import com.daniel.marketplaceapp.payment.domain.Payment
 import com.daniel.marketplaceapp.payment.enums.PaymentStatus
+import com.daniel.marketplaceapp.payment.outbox.PaymentOutboxEventRepository
+import com.daniel.marketplaceapp.payment.outbox.PaymentOutboxEventStatus
 import com.daniel.marketplaceapp.payment.repository.PaymentRepository
 import com.daniel.marketplaceapp.testsupport.annotations.ServiceIntegrationTest
 import com.daniel.marketplaceapp.testsupport.fixtures.randomUrl
@@ -18,6 +19,7 @@ import com.daniel.marketplaceapp.yookassa.payment.Amount
 import com.daniel.marketplaceapp.yookassa.payment.PaymentResponse
 import com.daniel.marketplaceapp.yookassa.payment.YooKassaPaymentStatus
 import com.daniel.marketplaceapp.yookassa.webhook.dto.YooKassaWebhookRequest
+import com.fasterxml.jackson.databind.ObjectMapper
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import java.math.BigDecimal
@@ -39,7 +41,7 @@ class PaymentWebhookServiceIntegrationTest {
     private lateinit var orderRepository: OrderRepository
 
     @Autowired
-    private lateinit var balanceTransactionRepository: BalanceTransactionRepository
+    private lateinit var paymentOutboxEventRepository: PaymentOutboxEventRepository
 
     @Autowired
     private lateinit var orderSteps: OrderSteps
@@ -49,6 +51,9 @@ class PaymentWebhookServiceIntegrationTest {
 
     @Autowired
     private lateinit var userSteps: UserSteps
+
+    @Autowired
+    private lateinit var objectMapper: ObjectMapper
 
     private lateinit var customerId: UUID
 
@@ -141,15 +146,25 @@ class PaymentWebhookServiceIntegrationTest {
             )
         )
 
-        val transactions = balanceTransactionRepository.findAllByPaymentIdAndType(
-            payment.id!!,
-            BalanceTransactionType.CREDIT
-        )
-        val transactionsBySellerId = transactions.associateBy { it.userId }
+        val outboxEvent = paymentOutboxEventRepository.findByAggregateIdAndEventType(
+            aggregateId = payment.id!!,
+            eventType = PAYMENT_SUCCEEDED_EVENT
+        ).shouldNotBeNull()
 
-        transactions.size shouldBe 2
-        transactionsBySellerId[sellerA].shouldNotBeNull().amount shouldBe product1.price * 2 + product2.price
-        transactionsBySellerId[sellerB].shouldNotBeNull().amount shouldBe product3.price * 3
+        outboxEvent.aggregateId shouldBe payment.id
+        outboxEvent.eventType shouldBe PAYMENT_SUCCEEDED_EVENT
+        outboxEvent.status shouldBe PaymentOutboxEventStatus.NEW
+        outboxEvent.attempts shouldBe 0
+        outboxEvent.publishedAt shouldBe null
+
+        val payload = objectMapper.readValue(
+            outboxEvent.payload,
+            PaymentSucceededEvent::class.java
+        )
+
+        payload.paymentId shouldBe payment.id
+        payload.orderId shouldBe order.id
+        payload.orderItems.size shouldBe 3
     }
 
     @Test

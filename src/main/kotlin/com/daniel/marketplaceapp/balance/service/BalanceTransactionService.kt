@@ -4,34 +4,38 @@ import com.daniel.marketplaceapp.balance.domain.BalanceTransaction
 import com.daniel.marketplaceapp.balance.enums.BalanceTransactionType
 import com.daniel.marketplaceapp.balance.repository.BalanceTransactionRepository
 import com.daniel.marketplaceapp.core.domain.Money
-import com.daniel.marketplaceapp.order.domain.Order
-import com.daniel.marketplaceapp.payment.domain.Payment
+import com.daniel.marketplaceapp.core.event.payment.PaymentSucceededEvent
+import com.fasterxml.jackson.databind.ObjectMapper
 import java.time.Instant
+import org.springframework.kafka.annotation.KafkaListener
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
 @Service
 class BalanceTransactionService(
-    private val repository: BalanceTransactionRepository
+    private val repository: BalanceTransactionRepository,
+    private val objectMapper: ObjectMapper,
 ) {
     @Transactional
-    fun creditSellersForPaidOrder(order: Order, payment: Payment) {
-        if (repository.existsByPaymentIdAndType(payment.id!!, BalanceTransactionType.CREDIT)) {
+    @KafkaListener(topics = ["payment.succeeded"])
+    fun creditSellersForPaidOrder(payload: String) {
+        val event = objectMapper.readValue(payload, PaymentSucceededEvent::class.java)
+        if (repository.existsByPaymentIdAndType(event.paymentId, BalanceTransactionType.CREDIT)) {
             return
         }
 
-        val amountBySellerId = order.items
+        val amountBySellerId = event.orderItems
             .groupBy { it.sellerId }
             .mapValues { (_, items) ->
-                items.fold(Money.ZERO) { acc, item -> acc + item.totalPrice() }
+                items.fold(Money.ZERO) { acc, item -> acc + (item.unitPrice * item.quantity) }
             }
 
         val transactions = amountBySellerId.map { (sellerId, amount) ->
             BalanceTransaction(
                 id = null,
                 userId = sellerId,
-                orderId = requireNotNull(order.id),
-                paymentId = requireNotNull(payment.id),
+                orderId = requireNotNull(event.orderId),
+                paymentId = event.paymentId,
                 type = BalanceTransactionType.CREDIT,
                 amount = amount,
                 createdAt = Instant.now(),
