@@ -1,6 +1,6 @@
 package com.daniel.marketplaceapp.payment.service
 
-import com.daniel.marketplaceapp.balance.service.BalanceTransactionService
+import com.daniel.marketplaceapp.core.event.payment.OrderItemPayload
 import com.daniel.marketplaceapp.core.event.payment.PaymentSucceededEvent
 import com.daniel.marketplaceapp.order.domain.Order
 import com.daniel.marketplaceapp.order.exception.OrderNotFoundException
@@ -8,14 +8,18 @@ import com.daniel.marketplaceapp.order.repository.OrderRepository
 import com.daniel.marketplaceapp.payment.domain.Payment
 import com.daniel.marketplaceapp.payment.enums.PaymentStatus
 import com.daniel.marketplaceapp.payment.exception.PaymentNotFoundException
+import com.daniel.marketplaceapp.payment.outbox.PaymentOutboxEvent
+import com.daniel.marketplaceapp.payment.outbox.PaymentOutboxEventRepository
+import com.daniel.marketplaceapp.payment.outbox.PaymentOutboxEventStatus
 import com.daniel.marketplaceapp.payment.repository.PaymentRepository
 import com.daniel.marketplaceapp.yookassa.payment.YooKassaPaymentStatus
 import com.daniel.marketplaceapp.yookassa.webhook.dto.YooKassaWebhookRequest
+import com.fasterxml.jackson.databind.ObjectMapper
 import java.time.Duration
+import java.time.Instant
 import java.util.UUID
 import org.slf4j.LoggerFactory
 import org.springframework.data.redis.core.StringRedisTemplate
-import org.springframework.kafka.core.KafkaTemplate
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
@@ -24,7 +28,8 @@ class PaymentWebhookService(
     private val paymentRepository: PaymentRepository,
     private val orderRepository: OrderRepository,
     private val redisTemplate: StringRedisTemplate,
-    private val kafkaTemplate: KafkaTemplate<String, PaymentSucceededEvent>
+    private val paymentOutboxEventRepository: PaymentOutboxEventRepository,
+    private val objectMapper: ObjectMapper
 ) {
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -76,15 +81,36 @@ class PaymentWebhookService(
         paymentRepository.save(payment)
         orderRepository.save(order)
 
+        val orderItems = order.items.map { OrderItemPayload(
+            sellerId = it.sellerId,
+            unitPrice = it.unitPrice,
+            quantity = it.quantity
+        ) }
         val event = PaymentSucceededEvent(
             order.id!!,
             payment.id!!,
-            order.items
+            orderItems
         )
-        kafkaTemplate.send("payment.succeeded", event)
+        val paymentOutboxEvent = getPaymentOutboxEvent(payment.id!!, event)
+        paymentOutboxEventRepository.save(paymentOutboxEvent)
 
         cacheRequest(req)
     }
+
+    private fun getPaymentOutboxEvent(
+        paymentId: UUID,
+        event: PaymentSucceededEvent
+    ) = PaymentOutboxEvent(
+            id = null,
+            aggregateId = paymentId,
+            eventType = PAYMENT_SUCCEEDED_EVENT,
+            payload = objectMapper.writeValueAsString(event),
+            status = PaymentOutboxEventStatus.NEW,
+            attempts = 0,
+            lastError = null,
+            createdAt = Instant.now(),
+            publishedAt = null,
+        )
 
     private fun processCanceledPayment(
         payment: Payment,

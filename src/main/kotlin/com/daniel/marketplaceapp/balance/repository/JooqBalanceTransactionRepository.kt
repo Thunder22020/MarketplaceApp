@@ -17,15 +17,7 @@ class JooqBalanceTransactionRepository(
 ): BalanceTransactionRepository {
     override fun save(bt: BalanceTransaction): BalanceTransaction {
         val id = UUID.randomUUID()
-        dsl.insertInto(BALANCE_TRANSACTIONS)
-            .set(BALANCE_TRANSACTIONS.ID, id)
-            .set(BALANCE_TRANSACTIONS.USER_ID, bt.userId)
-            .set(BALANCE_TRANSACTIONS.ORDER_ID, bt.orderId)
-            .set(BALANCE_TRANSACTIONS.PAYMENT_ID, bt.paymentId)
-            .set(BALANCE_TRANSACTIONS.TYPE, bt.type.name)
-            .set(BALANCE_TRANSACTIONS.AMOUNT, bt.amount.amount)
-            .set(BALANCE_TRANSACTIONS.CREATED_AT, bt.createdAt.toLocalDateTime())
-            .execute()
+        getInsertOneQuery(bt, id).execute()
         bt.id = id
         return bt
     }
@@ -34,18 +26,21 @@ class JooqBalanceTransactionRepository(
         val queries = transactions.map { bt ->
             val id = UUID.randomUUID()
             bt.id = id
-            dsl.insertInto(BALANCE_TRANSACTIONS)
-                .set(BALANCE_TRANSACTIONS.ID, id)
-                .set(BALANCE_TRANSACTIONS.USER_ID, bt.userId)
-                .set(BALANCE_TRANSACTIONS.ORDER_ID, bt.orderId)
-                .set(BALANCE_TRANSACTIONS.PAYMENT_ID, bt.paymentId)
-                .set(BALANCE_TRANSACTIONS.TYPE, bt.type.name)
-                .set(BALANCE_TRANSACTIONS.AMOUNT, bt.amount.amount)
-                .set(BALANCE_TRANSACTIONS.CREATED_AT, bt.createdAt.toLocalDateTime())
+            getInsertOneQuery(bt, id)
         }
         dsl.batch(queries).execute()
         return transactions
     }
+
+    private fun getInsertOneQuery(bt: BalanceTransaction, id: UUID) =
+        dsl.insertInto(BALANCE_TRANSACTIONS)
+            .set(BALANCE_TRANSACTIONS.ID, id)
+            .set(BALANCE_TRANSACTIONS.USER_ID, bt.userId)
+            .set(BALANCE_TRANSACTIONS.ORDER_ID, bt.orderId)
+            .set(BALANCE_TRANSACTIONS.PAYMENT_ID, bt.paymentId)
+            .set(BALANCE_TRANSACTIONS.TYPE, bt.type.name)
+            .set(BALANCE_TRANSACTIONS.AMOUNT, bt.amount.amount)
+            .set(BALANCE_TRANSACTIONS.CREATED_AT, bt.createdAt.toLocalDateTime())
 
     override fun existsByPaymentIdAndType(paymentId: UUID, type: BalanceTransactionType) =
         dsl.fetchExists(
